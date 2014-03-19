@@ -1,0 +1,10 @@
+"gamemode"
+{
+	"base"		"base"
+	"title"		"DogFight"
+	"maps"		"^df_"
+	"menusystem"	"1"
+	"settings"
+	{
+	}
+}
