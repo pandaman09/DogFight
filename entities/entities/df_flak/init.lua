@@ -111,7 +111,7 @@ function thaskjdhklasjdklsdkajlsdamlsmal(self)
 	local selfpos = self:GetPos()
 	
 	local targ    = self.Target
-	local valid   = ValidEntity(targ) and ((targ.Damage or 0) < 100)
+	local valid   = IsValid(targ) and ((targ.Damage or 0) < 100)
 	local targpos = valid and targ:GetPos() or nil
 	
 	if valid and (targpos:Distance(selfpos) < self.range) then

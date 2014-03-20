@@ -81,7 +81,7 @@ function ENT:PhysicsCollide(data)
 		local ent = data.HitEntity
 		if !self.primed then return end
 		if self.primed + self.PRIMEDELAY <= CurTime() then
-			if !ValidEntity(self.plane.ply) then self:Remove() return end
+			if !IsValid(self.plane.ply) then self:Remove() return end
 			if ent:GetClass() == "plane" then
 				ent:SetKiller(self.plane.ply, 1)
 			end
@@ -132,10 +132,10 @@ function ENT:OnRemove()
 	if !self.ID then
 		self.plane:TakeSpeedDamping(0.25)
 	end
-	if ValidEntity(self.bomb1) then
+	if IsValid(self.bomb1) then
 		self.bomb1:Remove()
 	end
-	if ValidEntity(self.bomb2) then
+	if IsValid(self.bomb2) then
 		self.bomb2:Remove()
 	end
 end

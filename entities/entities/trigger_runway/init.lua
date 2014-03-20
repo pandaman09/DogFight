@@ -26,13 +26,13 @@ function ENT:StartTouch(ent)
 		if self.team == ent.ply:Team() || !TEAM_BASED then
 			ent.OnRunway = true
 			ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
-			if ValidEntity(ent.wing1) then
+			if IsValid(ent.wing1) then
 				ent.wing1:SetCollisionGroup(COLLISION_GROUP_WORLD)
 			end
-			if ValidEntity(ent.wing2) then
+			if IsValid(ent.wing2) then
 				ent.wing2:SetCollisionGroup(COLLISION_GROUP_WORLD)
 			end
-			if ValidEntity(ent.tail1) then
+			if IsValid(ent.tail1) then
 				ent.tail1:SetCollisionGroup(COLLISION_GROUP_WORLD)
 			end
 		end
@@ -43,13 +43,13 @@ function ENT:EndTouch(ent)
 	if ent:GetClass() == "plane" then
 		ent.OnRunway = false
 		ent:SetCollisionGroup(0)
-		if ValidEntity(ent.wing1) then
+		if IsValid(ent.wing1) then
 			ent.wing1:SetCollisionGroup(0)
 		end
-		if ValidEntity(ent.wing2) then
+		if IsValid(ent.wing2) then
 			ent.wing2:SetCollisionGroup(0)
 		end
-		if ValidEntity(ent.tail1) then
+		if IsValid(ent.tail1) then
 			ent.tail1:SetCollisionGroup(0)
 		end
 	end
