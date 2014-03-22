@@ -36,6 +36,10 @@ util.AddNetworkString( "sendmaps" ) -- cl_panels.lua line ~600
 util.AddNetworkString( "mapvote" ) -- cl_panels.lua line ~611
 util.AddNetworkString( "team" ) -- cl_panels.lua line ~839
 
+util.AddNetworkString( "send_ul" ) -- player_extension.lua line ~59
+
+util.AddNetworkString( "send_ul" ) -- unlocks.lua
+
 --End of net Usermessages 'hooks' for net--
 
 

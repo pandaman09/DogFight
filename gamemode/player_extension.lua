@@ -7,38 +7,62 @@ function Pmeta:SendMessage(txt, chat)
 	if IsValid(self) then return end
 	if self.IsBot then return end
 	if !chat then chat = false end
-	umsg.Start("message", self)
-	umsg.String(txt)
-	umsg.Bool(chat)
-	umsg.End()
+	--umsg.Start("message", self)
+	--umsg.String(txt)
+	--umsg.Bool(chat)
+	--umsg.End()
+
+	net.Start("message")
+		net.WriteString(txt)
+		net.WriteBit(chat)
+	net.Send(self)
 end
 
 function Pmeta:StartCrashCam(kl)
-	umsg.Start("spec", self)
-	umsg.Entity(kl)
-	umsg.End()
+	--umsg.Start("spec", self)
+	--umsg.Entity(kl)
+	--umsg.End()
+
+	net.Start("spec")
+		net.WriteEntity(kl)
+	net.Send(self)
 end
 
 function Pmeta:StartNormalSpec(kl)
 	if #ents.FindByClass("plane") == 0 then return end
-	umsg.Start("norm_spec", self)
-	umsg.End()
+	--umsg.Start("norm_spec", self)
+	--umsg.End()
+
+	net.Start("norm_spec")
+	net.Send(self)
 end
 
 function Pmeta:SendNextSpawn(tme)
-	umsg.Start("nextspawn", self)
-	umsg.Long(tme)
-	umsg.End()
+	--umsg.Start("nextspawn", self)
+	--umsg.Long(tme)
+	--umsg.End()
+
+	net.Start("nextspawn")
+		net.WriteInt(tme,32)
+	net.Send(self)
 end
 
 function Pmeta:SendUnlocks()
 	if self.UNLOCKS then
-		umsg.Start("send_ul", self)
-		umsg.Short(#self.UNLOCKS)
-		for k,v in pairs(self.UNLOCKS) do
-			umsg.String(v)
-		end
-		umsg.End()
+		--umsg.Start("send_ul", self)
+		--umsg.Short(#self.UNLOCKS)
+		--for k,v in pairs(self.UNLOCKS) do
+		--	umsg.String(v)
+		--end
+		--umsg.End()
+
+		net.Start("send_ul")
+			net.WriteInt(#self.UNLOCKS, 16)
+			for k,v in pairs(self.UNLOCKS) do
+				net.WriteString(v)
+			end
+		net.Send(self)
+
 	end
 end
 
@@ -77,9 +101,14 @@ end
 
 function Pmeta:SendStats( ply )
 	if !ply.tot_crash || !ply.tot_targ_damage then Error("Player does not have this variable yet") end
-	umsg.Start("stats",self)
-	umsg.Long(ply.tot_crash)
-	umsg.Long(ply.tot_targ_damage)
-	umsg.End()
+	--umsg.Start("stats",self)
+	--umsg.Long(ply.tot_crash)
+	--umsg.Long(ply.tot_targ_damage)
+	--umsg.End()
+
+	net.Start("stats")
+		net.WriteInt(ply.tot_crash, 32)
+		net.WriteInt(ply.tot_targ_damage, 32)
+	net.Send(self)
 end
 
