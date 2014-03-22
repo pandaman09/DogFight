@@ -28,6 +28,14 @@ util.AddNetworkString( "sendflags" ) -- cl_init.lua line ~447
 util.AddNetworkString( "killmsg" ) -- cl_init.lua line ~727
 util.AddNetworkString( "monmsg" ) -- cl_init.lua line ~764
 
+util.AddNetworkString( "ul_start" ) -- cl_panels.lua line ~363
+util.AddNetworkString( "ul_end" ) -- cl_panels.lua line ~374
+util.AddNetworkString( "ul_chunk" ) -- cl_panels.lua line ~386
+util.AddNetworkString( "stats" ) -- cl_panels.lua line ~395
+util.AddNetworkString( "sendmaps" ) -- cl_panels.lua line ~600
+util.AddNetworkString( "mapvote" ) -- cl_panels.lua line ~611
+util.AddNetworkString( "team" ) -- cl_panels.lua line ~839
+
 --End of net Usermessages 'hooks' for net--
 
 
