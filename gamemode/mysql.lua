@@ -49,9 +49,13 @@ function Groups(ply)
 
 		ply.Flags = tostring(groups[1][1])
 		ply:ChatPrint("Your flags have loaded! You are in the "..TranslateFlags(ply).." groups!")
-		umsg.Start("sendflags", ply)
-		umsg.String(ply.Flags)
-		umsg.End()
+		--umsg.Start("sendflags", ply)
+		--umsg.String(ply.Flags)
+		--umsg.End()
+
+		net.Start("sendflags")
+			net.WriteString(ply.Flags)
+		net.Send(ply)
 
 		if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
 
