@@ -1,5 +1,5 @@
 
-local read = file.Find("../maps/df_*.bsp")
+local read = file.Find("maps/df_*.bsp", "GAME")
 
 function radio_play(ply,cmd,args)
 	if !ply:CheckGroup({"A","S"}) then ply:ChatPrint("You do not have permission for this!") return end
