@@ -96,12 +96,14 @@ function GM:UpdateValues() -- lovely and smooth  :D
 	end
 end
 
-function Plinfo(um)
-	HUD.SPEED_T = um:ReadShort()
-	HUD.AMMO_T = um:ReadShort()
+function Plinfo(length, client)
+	HUD.SPEED_T = net.ReadInt(16)
+	HUD.AMMO_T = net.ReadInt(16)
 end
 
-usermessage.Hook("up", Plinfo)
+--usermessage.Hook("up", Plinfo)
+
+net.Receive("up", Plinfo)
 
 function GM:Think()
 end
@@ -279,12 +281,14 @@ end
 
 function StartSpec(um)
 	SPEC.STAGE = 1
-	SPEC.ENT   = um:ReadEntity()
+	SPEC.ENT   = net.ReadEntity()
 	SPEC.POS   = HUD.PLANE_POS
 	SPEC.CUR   = CurTime()
 end
 
-usermessage.Hook("spec", StartSpec)
+--usermessage.Hook("spec", StartSpec)
+
+net.Receive("spec", StartSpec)
 
 function EndSpec(um)
 	SPEC.STAGE = nil
@@ -293,7 +297,9 @@ function EndSpec(um)
 	SPEC.CUR = CurTime()
 end
 
-usermessage.Hook("stop_spec", EndSpec)
+--usermessage.Hook("stop_spec", EndSpec)
+
+net.Receive("stop_spec", EndSpec)
 
 function StartNormalSpec(um)
 	local all = ents.FindByClass("plane")
@@ -304,7 +310,9 @@ function StartNormalSpec(um)
 	SPEC.CUR   = CurTime()
 end
 
-usermessage.Hook("norm_spec", StartNormalSpec)
+--usermessage.Hook("norm_spec", StartNormalSpec)
+
+net.Receive("norm_spec", StartNormalSpec)
 
 --[[
 local CHAT_OPEN = false
@@ -361,8 +369,8 @@ function AddMessage(um, ovrde, chat)
 	if !um then
 		txt = ovrde
 	else
-		txt = um:ReadString()
-		chat = um:ReadBool()
+		txt = net.ReadString()
+		chat = net.ReadBit()
 	end
 	LocalPlayer():ChatPrint(txt)
 	return
@@ -402,33 +410,43 @@ end
 end
 ]]--
 
-usermessage.Hook("message", AddMessage)
+--usermessage.Hook("message", AddMessage)
+
+net.Receive("message", AddMessage)
 
 function Help()
 	vgui.Create("df_menu")
 end
 
-usermessage.Hook("help", Help)
+--usermessage.Hook("help", Help)
+
+net.Receive("help", Help)
 
 function Ammo(um)
-	local ammo = um:ReadLong()
+	local ammo = net.ReadInt(32)
 	PLANE.MAX_AMMO = ammo
 end
 
-usermessage.Hook("update_ammo", Ammo)
+--usermessage.Hook("update_ammo", Ammo)
+
+net.Receive("update_ammo", Ammo)
 
 function NextSpawn(um)
-	LocalPlayer().NextSpawn = um:ReadLong()
+	LocalPlayer().NextSpawn = net.ReadInt(32)
 end
 
-usermessage.Hook("nextspawn", NextSpawn)
+--usermessage.Hook("nextspawn", NextSpawn)
+
+net.Receive("nextspawn", NextSpawn)
 
 function GetFlags(um)
-	LocalPlayer().Flags = um:ReadString()
+	LocalPlayer().Flags = net.ReadString()
 	print("FLAGS LOADED", LocalPlayer().Flags)
 end
 
-usermessage.Hook("sendflags", GetFlags)
+--usermessage.Hook("sendflags", GetFlags)
+
+net.Receive("sendflags", GetFlags)
 
 local HT = 0
 local M_alpha = 200
@@ -686,10 +704,10 @@ end
 local K_MSG = {}
 
 function KillMessage(um)
-	local typ = um:ReadShort()
-	local tem = um:ReadShort()
-	local txt = um:ReadString()
-	local ico = um:ReadString()
+	local typ = net.ReadInt(16)
+	local tem = net.ReadInt(16)
+	local txt = net.ReadString()
+	local ico = net.ReadString()
 	print(txt)
 	local t = {}
 	t.cur = CurTime()
@@ -706,7 +724,9 @@ function KillMessage(um)
 	table.insert(K_MSG, 1, t)
 end
 
-usermessage.Hook("killmsg", KillMessage)
+--usermessage.Hook("killmsg", KillMessage)
+
+net.Receive("killmsg", KillMessage)
 
 function GM:DrawKillMessages()
 	local W = ScrW()
@@ -730,8 +750,8 @@ end
 local M_MSG = {}
 
 function MoneyMessage(um)
-	local txt = um:ReadString()
-	local col = um:ReadString()
+	local txt = net.ReadString()
+	local col = net.ReadString()
 	col = string.Explode(" ", col)
 	local t = {}
 	t.txt = txt
@@ -741,7 +761,9 @@ function MoneyMessage(um)
 	table.insert(M_MSG, 1, t)
 end
 
-usermessage.Hook("monmsg", MoneyMessage)
+--usermessage.Hook("monmsg", MoneyMessage)
+
+net.Receive("monmsg", MoneyMessage)
 
 function GM:DrawMoney()
 	local W = ScrW()

@@ -14,6 +14,23 @@ include( "commands.lua" )
 GBU_SPAWNS = {}
 IDC_SPAWNS = {}
 
+--Usermessages 'hooks' for net--
+
+util.AddNetworkString( "up" ) -- cl_init.lua line ~104
+util.AddNetworkString( "spec" ) -- cl_init.lua line ~289
+util.AddNetworkString( "stop_spec" ) -- cl_init.lua line ~300
+util.AddNetworkString( "norm_spec" ) -- cl_init.lua line ~313
+util.AddNetworkString( "message" ) -- cl_init.lua line ~413
+util.AddNetworkString( "help" ) -- cl_init.lua line ~421
+util.AddNetworkString( "update_ammo" ) -- cl_init.lua line ~430
+util.AddNetworkString( "nextspawn" ) -- cl_init.lua line ~438
+util.AddNetworkString( "sendflags" ) -- cl_init.lua line ~447
+util.AddNetworkString( "killmsg" ) -- cl_init.lua line ~727
+util.AddNetworkString( "monmsg" ) -- cl_init.lua line ~764
+
+--End of net Usermessages 'hooks' for net--
+
+
 local RES = {
 "materials/modulus/particles/fire1.vmt",
 "materials/modulus/particles/fire1.vtf",
@@ -120,13 +137,19 @@ function GM:MessageAll(txt, chat)
 end
 
 function GM:ShowHelp(ply)
-	umsg.Start("help", ply)
-	umsg.End()
+	--umsg.Start("help", ply)
+	--umsg.End()
+
+	net.Start("help")
+	net.Send(ply)
 end
 
 function GM:ShowTeam(ply)
-	umsg.Start("team", ply)
-	umsg.End()
+	--umsg.Start("team", ply)
+	--umsg.End()
+
+	net.Start("team")
+	net.Send(ply)
 end
 
 function GM:ChooseTeam(ply)
@@ -248,8 +271,11 @@ function GM:SelectSpawn(ply)
 end
 
 function GM:PlayerSpawn(ply)
-	umsg.Start("stop_spec",ply)
-	umsg.End()
+	--umsg.Start("stop_spec",ply)
+	--umsg.End()
+
+	net.Start("stop_spec")
+	net.Send(ply)
 	if tonumber(ply:GetInfo("df_film")) == 1 then
 		ply:Spectate(OBS_MODE_ROAMING)
 		return
@@ -307,11 +333,17 @@ end
 
 function GM:KillMessage(ply, txt, typ,ico)
 	ico = ico or "suicide"
-	umsg.Start("killmsg")
-	umsg.Short(typ)
-	umsg.Short(ply:Team())
-	umsg.String(txt)
-	umsg.End()
+	--umsg.Start("killmsg")
+	--umsg.Short(typ)
+	--umsg.Short(ply:Team())
+	--umsg.String(txt)
+	--umsg.End()
+
+	net.Start("killmsg")
+		net.WriteInt(typ, 16)
+		net.WriteInt(ply:Team(), 16)
+		net.WriteString(txt)
+	net.Send(player.GetAll()) --not sure if this is correct, I think this umsg is sent to everyone.
 end
 
 function GM:PlayerDeath(ply,pln, pln2)
