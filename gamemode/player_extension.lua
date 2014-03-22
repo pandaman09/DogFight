@@ -1,6 +1,6 @@
 
 local Pmeta = FindMetaTable( "Player" )
-local Emeta = FindMetaTable( "Entity")
+local Emeta = FindMetaTable( "Entity" )
 local ply = LocalPlayer()
 
 function Pmeta:SendMessage(txt, chat)
