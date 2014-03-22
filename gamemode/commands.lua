@@ -15,12 +15,19 @@ concommand.Add("df_radio_play_all", radio_play)
 local mapvotes = {}
 
 function SendMaps(ply,cmd,args)
-	umsg.Start( "sendmaps", ply )
-		umsg.Short( #read )
-		for k,v in pairs( read ) do
-			umsg.String( v )
+	--umsg.Start( "sendmaps", ply )
+	--	umsg.Short( #read )
+	--	for k,v in pairs( read ) do
+	--		umsg.String( v )
+	--	end
+	--umsg.End( )
+
+	net.Start("sendmaps")
+		net.WriteInt( #read, 16 )
+		for k,v in pairs(read) do
+			net.WriteString( v )
 		end
-	umsg.End( )
+	net.Send(ply)
 end
 
 concommand.Add("getmaps", SendMaps)
@@ -52,10 +59,14 @@ function GM:StartMapVote()
 	for k,v in pairs(read) do
 		mapvotes[v] = 0
 	end
-	for k,v in pairs(player.GetAll()) do
-		umsg.Start("mapvote", v)
-		umsg.End()
-	end
+	--for k,v in pairs(player.GetAll()) do
+		--umsg.Start("mapvote", v)
+		--umsg.End()
+	--end
+
+	net.Start("mapvote")
+	net.Send(player.GetAll()) -- more efficient?
+
 	timer.Simple(15, GAMEMODE.EndMapVote, GAMEMODE)
 end
 
