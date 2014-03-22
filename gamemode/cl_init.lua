@@ -279,7 +279,7 @@ function GM:RenderScreenspaceEffects()
 	end
 end
 
-function StartSpec(um)
+function StartSpec(length, client)
 	SPEC.STAGE = 1
 	SPEC.ENT   = net.ReadEntity()
 	SPEC.POS   = HUD.PLANE_POS
@@ -290,7 +290,7 @@ end
 
 net.Receive("spec", StartSpec)
 
-function EndSpec(um)
+function EndSpec(length, client)
 	SPEC.STAGE = nil
 	SPEC.ENT   = nil
 	SPEC.POS = Vector(0,0,0)
@@ -301,7 +301,7 @@ end
 
 net.Receive("stop_spec", EndSpec)
 
-function StartNormalSpec(um)
+function StartNormalSpec(length, client)
 	local all = ents.FindByClass("plane")
 	if #all == 0 then return end
 	SPEC.STAGE = 4
@@ -422,7 +422,7 @@ end
 
 net.Receive("help", Help)
 
-function Ammo(um)
+function Ammo(length, client)
 	local ammo = net.ReadInt(32)
 	PLANE.MAX_AMMO = ammo
 end
@@ -431,7 +431,7 @@ end
 
 net.Receive("update_ammo", Ammo)
 
-function NextSpawn(um)
+function NextSpawn(length, client)
 	LocalPlayer().NextSpawn = net.ReadInt(32)
 end
 
@@ -439,7 +439,7 @@ end
 
 net.Receive("nextspawn", NextSpawn)
 
-function GetFlags(um)
+function GetFlags(length, client)
 	LocalPlayer().Flags = net.ReadString()
 	print("FLAGS LOADED", LocalPlayer().Flags)
 end
@@ -703,7 +703,7 @@ end
 
 local K_MSG = {}
 
-function KillMessage(um)
+function KillMessage(length, client)
 	local typ = net.ReadInt(16)
 	local tem = net.ReadInt(16)
 	local txt = net.ReadString()
@@ -749,7 +749,7 @@ end
 
 local M_MSG = {}
 
-function MoneyMessage(um)
+function MoneyMessage(length, client)
 	local txt = net.ReadString()
 	local col = net.ReadString()
 	col = string.Explode(" ", col)
