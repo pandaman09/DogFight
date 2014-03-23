@@ -2,14 +2,14 @@
 function EFFECT:Init( data ) 
    
 	self.plane = data:GetEntity()
- 	if !ValidEntity(self.plane) then return end
+ 	if !IsValid(self.plane) then return end
 	self.emitter = ParticleEmitter( self.plane:GetPos())
    
  end
 
  
 function EFFECT:Think()
-   	if not ValidEntity( self.plane ) then
+   	if not IsValid( self.plane ) then
 		return false
 	end
 	self.pose = self.plane:GetPos() + (self.plane:GetUp() * 30) + (self.plane:GetForward() * -55)

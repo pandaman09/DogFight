@@ -99,7 +99,7 @@ function GM:InitPostEntity()
 		IDC_TARG = ents.FindByName("df_idc_target")
 		GBU_TARG = GBU_TARG[1]
 		IDC_TARG = IDC_TARG[1]
-		if ValidEntity(GBU_TARG) then
+		if IsValid(GBU_TARG) then
 			GBU_TARG:Remove()
 		end
 		if IsValid(IDC_TARG) then

@@ -119,7 +119,7 @@ function ENT:Initialize()
 end
 
 function ENT:AddPilot(ent)
-	if !ent:IsPlayer() && !ValidEntity(self.player) then return end
+	if !ent:IsPlayer() && !IsValid(self.player) then return end
 	ent:SetColor(255,255,255,0)
 	self.ply = ent
 	self.ply:StripWeapons()
@@ -162,10 +162,10 @@ function ENT:AddPilot(ent)
 end
 
 function ENT:LoadGuns()
-	if ValidEntity(self.gun) then
+	if IsValid(self.gun) then
 		self.gun:Remove()
 	end
-	if ValidEntity(self.gun2) then
+	if IsValid(self.gun2) then
 		self.gun2:Remove()
 	end
 	self.gun = ents.Create(self.PRIMARY_WEAPON)
@@ -215,30 +215,30 @@ function ENT:DamageModel()
 	end
 	if self.Damage >= 100 then
 		if math.random(1,2) == 1 then
-			if ValidEntity(self.wing1_weld) && ValidEntity(self.wing2_weld) then
+			if IsValid(self.wing1_weld) && IsValid(self.wing2_weld) then
 				self.wing1_weld:Remove()
 				self:EmitSound("physics/metal/metal_sheet_impact_bullet2.wav", 100,100)
 				self.ply:SendMessage("Your wing has fallen off!")
-				if ValidEntity(self.killer) then
+				if IsValid(self.killer) then
 					self.ply:StartCrashCam(self.killer)
 				end
 			end
-		elseif ValidEntity(self.wing2_weld) && ValidEntity(self.wing1_weld) then
+		elseif IsValid(self.wing2_weld) && IsValid(self.wing1_weld) then
 			self.wing2_weld:Remove()
 			self:EmitSound("physics/metal/metal_sheet_impact_bullet2.wav", 100,100)
 			self.ply:SendMessage("Your wing has fallen off!")
-			if ValidEntity(self.killer) then
+			if IsValid(self.killer) then
 				self.ply:StartCrashCam(self.killer)
 			end
 		end
 	end
-	if !ValidEntity(self.wing1) || !ValidEntity(self.wing1_weld) then
+	if !IsValid(self.wing1) || !IsValid(self.wing1_weld) then
 		p:ApplyForceOffset(self:GetUp() * -150, self:GetPos() + (self:GetRight() * -250))
 		p:ApplyForceCenter(Vector(0,0,-10000))
 		self.Wingless = true
 		self.Engine_Sound:ChangePitch(math.Clamp(math.random(-50,20) + self.speed * 3, 50,1000))
 		self.Engine_Sound:ChangeVolume(math.Clamp(self.speed * 3, 100,400))
-	elseif !ValidEntity(self.wing2) || !ValidEntity(self.wing2_weld) then
+	elseif !IsValid(self.wing2) || !IsValid(self.wing2_weld) then
 		p:ApplyForceOffset(self:GetUp() * -150, self:GetPos() + (self:GetRight() * 250))
 		p:ApplyForceCenter(Vector(0,0,-10000))
 		self.Wingless = true
@@ -253,7 +253,7 @@ end
 ENT.shcnt = 0
 
 function ENT:Shake(dur, amp, cont)
-	if !ValidEntity(self) then return end
+	if !IsValid(self) then return end
 	if self.OnRunway then return end
 	if !dur then dur = 10 end
 	if !cont then
@@ -280,7 +280,7 @@ ENT.lasthorn = 0
 ENT.LAST_THINK = 0
 
 function ENT:Think()
-	if !ValidEntity(self.ply) || !self.ply:Alive() then self:Remove() end
+	if !IsValid(self.ply) || !self.ply:Alive() then self:Remove() end
 	if self.LastPos + 10 <= CurTime() then
 		self.ply:SetPos(self:GetPos())
 		self.LastPos = CurTime()
@@ -288,7 +288,7 @@ function ENT:Think()
 	if self.OnRunway && self:GetVelocity():Length() <= 200 then
 		self.Damage = 0
 		self.gun:Regen()
-		if ValidEntity(self.gun2) then
+		if IsValid(self.gun2) then
 			self.gun2:Regen()
 		end
 	else
@@ -296,7 +296,7 @@ function ENT:Think()
 			self.gun:FireGun()
 			self:SendValues()
 		end
-		if self.ply:KeyDown(IN_ATTACK2) && ValidEntity(self.gun2) then
+		if self.ply:KeyDown(IN_ATTACK2) && IsValid(self.gun2) then
 			self.gun2:FireGun()
 			self:SendValues()
 		end
@@ -343,7 +343,7 @@ function ENT:DoDamageTwitch()
 end
 
 function ENT:PhysicsSimulate( phys, deltatime )
-	if !ValidEntity(self.ply) then return end
+	if !IsValid(self.ply) then return end
 	local p = self:GetPhysicsObject()
 	local ply = self.ply
 	local speed = self.speed / self.SPEED_MOD
@@ -442,11 +442,11 @@ concommand.Add("-roll_l", Q_UP)
 
 function ENT:PhysicsCollide( data, physobj )
 	local plane = nil
-	if ValidEntity(data.Entity) then
+	if IsValid(data.Entity) then
 		if data.Entity:GetClass() == "plane" then
 			plane = data.Entity
 		end
-		if ValidEntity(data.Entity.plane) then
+		if IsValid(data.Entity.plane) then
 			plane = data.Entity.plane
 		end
 		if plane then
@@ -455,14 +455,14 @@ function ENT:PhysicsCollide( data, physobj )
 			trc.endpos = plane:GetPos() + plane:GetForward() * 100
 			trc.filter = {plane, plane.ply}
 			local tr = util.TraceLine(trc)
-			if ValidEntity(tr.Entity) then
+			if IsValid(tr.Entity) then
 				if tr.Entity == self then
 					local trc = {}
 					trc.start = self:GetPos()
 					trc.endpos = self:GetPos() + self:GetForward() * 100
 					trc.filter = {self, self.ply}
 					local tr = util.TraceLine(trc)
-					if ValidEntity(tr.Entity) then
+					if IsValid(tr.Entity) then
 						if tr.Entity == plane then
 							self.Damage = self.Damage + data.Speed 
 							self:EmitSound("physics/metal/metal_sheet_impact_hard2.wav")
@@ -548,16 +548,16 @@ end
 function ENT:OnRemove()
 	self.Engine_Sound:Stop()
 	self.scrape:Stop()
-	if ValidEntity(self.wing1) then
+	if IsValid(self.wing1) then
 		self.wing1:Remove()
 	end
-	if ValidEntity(self.wing2) then
+	if IsValid(self.wing2) then
 		self.wing2:Remove()
 	end
-	if ValidEntity(self.tail1) then
+	if IsValid(self.tail1) then
 		self.tail1:Remove()
 	end
-	if ValidEntity(self.ply) && self.ply:Alive() then
+	if IsValid(self.ply) && self.ply:Alive() then
 		self.ply:Kill()
 	end
 end
