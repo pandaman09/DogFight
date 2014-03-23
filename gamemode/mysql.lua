@@ -26,6 +26,7 @@ function dbquery( query, callback )
 			print("Database is not connected\n")
 		end
 		print("SQL error: " .. tostring(error) .. "\n")
+		print("SQL of: "..tostring(sql).."\n")
 	end
 
 	q:start()
@@ -93,7 +94,7 @@ function Groups(ply)
 		end)]]--
 
 	dbquery("SELECT groups FROM clients WHERE steamid ='" ..steamid.."'", function(groups)
-		ply.Flags = tostring(groups[1][1])
+		ply.Flags = tostring(groups[1].groups)
 		ply:ChatPrint("Your flags have loaded! You are in the "..TranslateFlags(ply).." groups!")
 
 		net.Start("sendflags")
@@ -181,7 +182,7 @@ function LoadUnlocks(ply)
 	end)]]--
 
 	dbquery("SELECT unlocks FROM dogfight WHERE steamid ='" ..steamid.."'", function(loadunlocks)
-		if (loadunlocks[1] == nil) or (loadunlocks[1][1] == nil) then
+		if (loadunlocks[1] == nil) or (loadunlocks[1].unlocks == nil) then
 			ply.Allow = true
 			return
 		end
@@ -240,9 +241,8 @@ function LoadProfiles(ply)
 			end)
 		end
 	end)]]--
-
 	dbquery("SELECT steamid FROM clients WHERE steamid ='" ..steamid.."'", function(checkprofile)
-		if ( checkprofile[1] == nil ) or ( checkprofile[1][1] == nil ) then
+		if ( checkprofile[1] == nil ) or ( checkprofile[1].steamid == nil ) then
 			--tmysql.query("INSERT INTO clients (steamid,name) VALUES('"..steamid.."','"..tmysql.escape(name).."')", function(newplayer,status,error)
 			--	if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
 			--end)
@@ -300,11 +300,11 @@ function LoadProfiles(ply)
 			deaths = 0
 			money = 0
 		else
-			ply.tot_crash = tonumber(loadstuff[1][4])
-			ply.tot_targ_damage = tonumber(loadstuff[1][5])
-			kills = tonumber(loadstuff[1][1])
-			deaths = tonumber(loadstuff[1][2])
-			money = tonumber(loadstuff[1][3])
+			ply.tot_crash = tonumber(loadstuff[1].tc)
+			ply.tot_targ_damage = tonumber(loadstuff[1].ttd)
+			kills = tonumber(loadstuff[1].kills)
+			deaths = tonumber(loadstuff[1].deaths)
+			money = tonumber(loadstuff[1].money)
 		end
 		ply:SetNWInt("kills", kills )
 		ply:SetNWInt("deaths", deaths )
