@@ -378,9 +378,13 @@ UL.OVERRIDES = {"AMMO_2"}
 function UL.FUNCTION(plane)
 	plane.MAX_AMMO = 750
 	plane.gun.Ammo = 750
-	umsg.Start("update_ammo", plane.ply)
-	umsg.Long(750)
-	umsg.End()
+	--umsg.Start("update_ammo", plane.ply)
+	--umsg.Long(750)
+	--umsg.End()
+
+	net.Start("update_ammo")
+		net.WriteInt(750, 32)
+	net.Send(plane.ply)
 end
 
 Register("AMMO_1", UL)
@@ -397,9 +401,15 @@ UL.DISABLES = {"AMMO_1"}
 function UL.FUNCTION(plane)
 	plane.MAX_AMMO = 1000
 	plane.gun.Ammo = 1000
-	umsg.Start("update_ammo", plane.ply)
-	umsg.Long(1000)
-	umsg.End()
+	--umsg.Start("update_ammo", plane.ply)
+	--umsg.Long(1000)
+	--umsg.End()
+
+	net.Start("update_ammo")
+		net.WriteInt(1000, 32)
+	net.Send(plane.ply)
+
+
 	local prop = ents.Create("prop_physics")
 	prop:SetModel("models/Items/BoxSRounds.mdl")
 	prop:SetPos(plane:GetPos() + plane:GetRight() * -13 + Vector(0,0,8) + plane:GetForward() * -15)
@@ -420,9 +430,15 @@ UL.COST = 1750
 function UL.FUNCTION(plane)
 	plane.MAX_AMMO = 2000
 	plane.gun.Ammo = 2000
-	umsg.Start("update_ammo", plane.ply)
-	umsg.Long(2000)
-	umsg.End()	
+	--umsg.Start("update_ammo", plane.ply)
+	--umsg.Long(2000)
+	--umsg.End()	
+
+	net.Start("update_ammo")
+		net.WriteInt(2000, 32)
+	net.Send(plane.ply)
+
+
 	local prop = ents.Create("prop_physics")
 	prop:SetModel("models/Items/BoxSRounds.mdl")
 	prop:SetPos(plane:GetPos() + plane:GetRight() * 13 + Vector(0,0,8) + plane:GetForward() * -15)

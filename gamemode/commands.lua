@@ -1,5 +1,5 @@
 
-local read = file.Find("../maps/df_*.bsp")
+local read = file.Find("maps/df_*.bsp", "GAME")
 
 function radio_play(ply,cmd,args)
 	if !ply:CheckGroup({"A","S"}) then ply:ChatPrint("You do not have permission for this!") return end
@@ -15,12 +15,19 @@ concommand.Add("df_radio_play_all", radio_play)
 local mapvotes = {}
 
 function SendMaps(ply,cmd,args)
-	umsg.Start( "sendmaps", ply )
-		umsg.Short( #read )
-		for k,v in pairs( read ) do
-			umsg.String( v )
+	--umsg.Start( "sendmaps", ply )
+	--	umsg.Short( #read )
+	--	for k,v in pairs( read ) do
+	--		umsg.String( v )
+	--	end
+	--umsg.End( )
+
+	net.Start("sendmaps")
+		net.WriteInt( #read, 16 )
+		for k,v in pairs(read) do
+			net.WriteString( v )
 		end
-	umsg.End( )
+	net.Send(ply)
 end
 
 concommand.Add("getmaps", SendMaps)
@@ -52,11 +59,16 @@ function GM:StartMapVote()
 	for k,v in pairs(read) do
 		mapvotes[v] = 0
 	end
-	for k,v in pairs(player.GetAll()) do
-		umsg.Start("mapvote", v)
-		umsg.End()
-	end
-	timer.Simple(15, GAMEMODE.EndMapVote, GAMEMODE)
+	--for k,v in pairs(player.GetAll()) do
+		--umsg.Start("mapvote", v)
+		--umsg.End()
+	--end
+
+	net.Start("mapvote")
+	net.Send(player.GetAll()) -- more efficient?
+
+	--timer.Simple(15, GAMEMODE.EndMapVote, GAMEMODE)
+	timer.Simple(15, function() GAMEMODE.EndMapVote() end)
 end
 
 function GM:EndMapVote()
@@ -76,7 +88,8 @@ function GM:EndMapVote()
 	else
 		for k,v in pairs(player.GetAll()) do
 			v:ChatPrint(winner.." has won the map vote!")
-			timer.Simple(5, GAMEMODE.ChangeMap, GAMEMODE, string.sub(winner,1, -5 ))
+			--timer.Simple(5, GAMEMODE.ChangeMap, GAMEMODE, string.sub(winner,1, -5 ))
+			timer.Simple(5, function() GAMEMODE.ChangeMap(string.sub(winner,1, -5)) end)
 			for k,v in pairs(player.GetAll()) do
 				SaveProfile(v)
 			end

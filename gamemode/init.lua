@@ -1,6 +1,4 @@
 
-include("mysql.lua")
-
 AddCSLuaFile( "cl_init.lua" )
 AddCSLuaFile( "cl_panels.lua" )
 AddCSLuaFile( "shared.lua" )
@@ -11,8 +9,39 @@ include( "player_extension.lua" )
 include( "shared.lua" )
 include( "commands.lua" )
 
+include("mysql.lua")
+
 GBU_SPAWNS = {}
 IDC_SPAWNS = {}
+
+--Usermessages 'hooks' for net--
+
+util.AddNetworkString( "up" ) -- cl_init.lua line ~104
+util.AddNetworkString( "spec" ) -- cl_init.lua line ~289
+util.AddNetworkString( "stop_spec" ) -- cl_init.lua line ~300
+util.AddNetworkString( "norm_spec" ) -- cl_init.lua line ~313
+util.AddNetworkString( "message" ) -- cl_init.lua line ~413
+util.AddNetworkString( "help" ) -- cl_init.lua line ~421
+util.AddNetworkString( "update_ammo" ) -- cl_init.lua line ~430
+util.AddNetworkString( "nextspawn" ) -- cl_init.lua line ~438
+util.AddNetworkString( "sendflags" ) -- cl_init.lua line ~447
+util.AddNetworkString( "killmsg" ) -- cl_init.lua line ~727
+util.AddNetworkString( "monmsg" ) -- cl_init.lua line ~764
+
+util.AddNetworkString( "ul_start" ) -- cl_panels.lua line ~363
+util.AddNetworkString( "ul_end" ) -- cl_panels.lua line ~374
+util.AddNetworkString( "ul_chunk" ) -- cl_panels.lua line ~386
+util.AddNetworkString( "stats" ) -- cl_panels.lua line ~395
+util.AddNetworkString( "sendmaps" ) -- cl_panels.lua line ~600
+util.AddNetworkString( "mapvote" ) -- cl_panels.lua line ~611
+util.AddNetworkString( "team" ) -- cl_panels.lua line ~839
+
+util.AddNetworkString( "send_ul" ) -- player_extension.lua line ~59
+
+util.AddNetworkString( "send_ul" ) -- unlocks.lua
+
+--End of net Usermessages 'hooks' for net--
+
 
 local RES = {
 "materials/modulus/particles/fire1.vmt",
@@ -120,13 +149,19 @@ function GM:MessageAll(txt, chat)
 end
 
 function GM:ShowHelp(ply)
-	umsg.Start("help", ply)
-	umsg.End()
+	--umsg.Start("help", ply)
+	--umsg.End()
+
+	net.Start("help")
+	net.Send(ply)
 end
 
 function GM:ShowTeam(ply)
-	umsg.Start("team", ply)
-	umsg.End()
+	--umsg.Start("team", ply)
+	--umsg.End()
+
+	net.Start("team")
+	net.Send(ply)
 end
 
 function GM:ChooseTeam(ply)
@@ -139,7 +174,8 @@ function GM:ChooseTeam(ply)
 end
 
 function GM:Reset(tem, pos, ang, model)
-	timer.Simple(1,self.BalanceTeams, self)
+	--timer.Simple(1,self.BalanceTeams, self)
+	timer.Simple(1, function() self.BalanceTeams() end)
 end
 
 function GM:CanPlayerSuicide ( ply )
@@ -163,8 +199,10 @@ function GM:PlayerInitialSpawn(ply)
 	self:ChooseTeam(ply)
 	ply.learnt = false
 	ply.targ_damage = 0
-	timer.Simple(7,ply.GetOptions,ply)
-	timer.Simple(3,ply.SendStats,ply)
+	--timer.Simple(7,ply.GetOptions,ply)
+	timer.Simple(7, function() ply.GetOptions() end)
+	--timer.Simple(3,ply.SendStats,ply)
+	timer.Simple(3, function() ply.SendStats() end)
 	if UL_DEBUG then
 		ply.UNLOCKS = {{ID = "COL_RED", EN = 1}, {ID = "TURBO_1", EN = 1}, {ID = "WING_G", EN = 1}}
 	end
@@ -248,8 +286,11 @@ function GM:SelectSpawn(ply)
 end
 
 function GM:PlayerSpawn(ply)
-	umsg.Start("stop_spec",ply)
-	umsg.End()
+	--umsg.Start("stop_spec",ply)
+	--umsg.End()
+
+	net.Start("stop_spec")
+	net.Send(ply)
 	if tonumber(ply:GetInfo("df_film")) == 1 then
 		ply:Spectate(OBS_MODE_ROAMING)
 		return
@@ -307,15 +348,22 @@ end
 
 function GM:KillMessage(ply, txt, typ,ico)
 	ico = ico or "suicide"
-	umsg.Start("killmsg")
-	umsg.Short(typ)
-	umsg.Short(ply:Team())
-	umsg.String(txt)
-	umsg.End()
+	--umsg.Start("killmsg")
+	--umsg.Short(typ)
+	--umsg.Short(ply:Team())
+	--umsg.String(txt)
+	--umsg.End()
+
+	net.Start("killmsg")
+		net.WriteInt(typ, 16)
+		net.WriteInt(ply:Team(), 16)
+		net.WriteString(txt)
+	net.Send(player.GetAll()) --not sure if this is correct, I think this umsg is sent to everyone.
 end
 
 function GM:PlayerDeath(ply,pln, pln2)
-	timer.Simple(1,self.BalanceTeams, self)
+	--timer.Simple(1,self.BalanceTeams, self)
+	timer.Simple(1, function() self.BalanceTeams() end)
 	local killer = ply.plane.killer
 	if killer == "LOAD" then
 		ply:SendNextSpawn(CurTime() + 1)
@@ -443,6 +491,5 @@ function GM:ShutDown()
 	for k,v in pairs(player.GetAll()) do
 		SaveProfile(v)
 	end
-
 end
 

@@ -19,7 +19,8 @@ function PANEL:Init()
 	self:SetTitle( "DogFight Menu" )
 	if !OPENED && GetConVarNumber( "df_spawnmenu" ) == 1 then
 		self:ShowCloseButton(true)
-		timer.Simple(4, self.ShowCloseButton, self,true)
+		--timer.Simple(4, self.ShowCloseButton, self,true)
+		timer.Simple(4, function() self.ShowCloseButton(true) end)
 		OPENED = true
 	end
 	self:MakePopup()
@@ -355,38 +356,46 @@ end
 local num = 0
 local ID = 0
 
-function Start_UL(um)
+function Start_UL(length, client)
 	LocalPlayer().UNLOCKS = {}
-	num = um:ReadShort()
+	num = net.ReadInt(16)
 end
 
-usermessage.Hook("ul_start", Start_UL)
+--usermessage.Hook("ul_start", Start_UL)
 
-function End_UL(um)
+net.Receive("ul_start", Start_UL)
+
+function End_UL(length, client)
 	print("Unlocks have sent")
 	if HANGAR && HANGAR.Refresh then
 		HANGAR:Refresh()
 	end
 end
 
-usermessage.Hook("ul_end", End_UL)
+--usermessage.Hook("ul_end", End_UL)
 
-function Update_UL(um)
+net.Receive("ul_end", End_UL)
+
+function Update_UL(length, client)
 	if num == 0 then return end
 	local t = {}
-	t.ID = um:ReadString()
-	t.EN = um:ReadShort()
+	t.ID = net.ReadString()
+	t.EN = net.ReadInt(16)
 	table.insert(LocalPlayer().UNLOCKS, t)
 end
 
-usermessage.Hook("ul_chunk", Update_UL)
+--usermessage.Hook("ul_chunk", Update_UL)
 
-function StatsLoad(um)
-	LocalPlayer().tot_crash = um:ReadLong()
-	LocalPlayer().tot_targ_damage = um:ReadLong()
+net.Receive("ul_chunk", Update_UL)
+
+function StatsLoad(length, client)
+	LocalPlayer().tot_crash = net.ReadInt(32)
+	LocalPlayer().tot_targ_damage = net.ReadInt(32)
 end
 
-usermessage.Hook("stats", StatsLoad)
+--usermessage.Hook("stats", StatsLoad)
+
+net.Receive("stats", StatsLoad)
 
 function PANEL:PerformLayout()
 	self:SizeToContents()
@@ -513,7 +522,8 @@ function PANEL:Init()
 										local reason = self.reason.TextEntry:GetValue()
 										RunConsoleCommand("df_banid",v:UserID( ),time)
 										RunConsoleCommand("df_kickid",v:UserID( ),"Banned for "..time.." minute(s) for "..reason)
-										timer.Simple(0.2, self.Refresh,self)
+										--timer.Simple(0.2, self.Refresh,self)
+										timer.Simple(0.2, function() self.Refresh() end)
 									end
 								end
 						  end
@@ -530,7 +540,8 @@ function PANEL:Init()
 										local reason = self.reason.TextEntry:GetValue()
 																				print(reason)
 										RunConsoleCommand("df_kickid",v:UserID( ),reason)
-										timer.Simple(0.2, self.Refresh,self)
+										--timer.Simple(0.2, self.Refresh,self)
+										timer.Simple(0.2, function() self.Refresh() end)
 									end
 								end
 						  end
@@ -577,28 +588,32 @@ function PANEL:PerformLayout()
 	self.list:StretchToParent(2,26,2,2)
 end
 
-function GetMaps(um)
-	local AM = um:ReadShort()
+function GetMaps(length, client)
+	local AM = net.ReadInt(16)
 	if AM == 0 then
 		MAP.list:AddLine("No maps!")
 		return
 	else
 		for i=1, AM do
-			MAP.list:AddLine(um:ReadString())
+			MAP.list:AddLine(net.ReadString())
 		end
 	end
 end
 
-usermessage.Hook("sendmaps", GetMaps)
+--usermessage.Hook("sendmaps", GetMaps)
+
+net.Receive("sendmaps", GetMaps)
 
 
 vgui.Register( "df_maps", PANEL, "DFrame")
 
-function StartMapVote(um)
+function StartMapVote(length, client)
 	MAP = vgui.Create("df_maps")
 end
 
-usermessage.Hook("mapvote", StartMapVote)
+--usermessage.Hook("mapvote", StartMapVote)
+
+net.Receive("mapvote", StartMapVote)
 
 --if TEAM_BASED then
 local PANEL = {}
@@ -814,7 +829,7 @@ function SendTrail()
 	end
 end
 
-timer.Simple(10, SendTrail)
+timer.Simple(10, SendTrail )
 
 function Trail()
 	if LocalPlayer():CheckGroup({"G", "P","S"}) then
@@ -824,7 +839,9 @@ function Trail()
 	end
 end
 
-usermessage.Hook("team", Trail)
+--usermessage.Hook("team", Trail)
+
+net.Receive("team", Trail)
 
  local PANEL = {}
 
