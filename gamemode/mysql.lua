@@ -188,7 +188,7 @@ function LoadUnlocks(ply)
 		end
 
 		ply.UNLOCKS = {}
-		local str = loadunlocks[1][1]
+		local str = loadunlocks[1].unlocks
 		local new = ""
 		if string.sub(str,1,1) == "," then
 			str = string.sub(str,1,string.len(str))
