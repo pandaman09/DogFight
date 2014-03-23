@@ -290,9 +290,7 @@ function LoadProfiles(ply)
 	dbquery("SELECT kills,deaths,money,tc,ttd FROM dogfight WHERE steamid ='" ..steamid.."'", function(loadstuff)
 		if ( loadstuff[1] == nil )  then
 
-			tmysql.query("INSERT INTO dogfight (steamid,kills,deaths,money,tc,ttd,unlocks) VALUES('"..steamid.."',0,0,0,0,0,'DEFAULT_UNLOCK,1')", function(newdf,status,error)
-				if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-			end)
+			dbquery("INSERT INTO dogfight (steamid,kills,deaths,money,tc,ttd,unlocks) VALUES('"..steamid.."',0,0,0,0,0,'DEFAULT_UNLOCK,1')")
 
 			ply.tot_targ_damage = 0
 			ply.tot_crash = 0
