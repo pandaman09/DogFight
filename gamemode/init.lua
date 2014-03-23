@@ -335,7 +335,7 @@ function GM:PlayerSpawn(ply)
 		local mat = ply.trail.MAT
 		ply.plane.trail = util.SpriteTrail(ply.plane, 0, col, false, 30, 1, 4, 1/(15+1)*0.5, mat)
 	end
-	if !ply.Allow && ply:SteamID() != "STEAM_0:0:0" && !SinglePlayer() then
+	if !ply.Allow && ply:SteamID() != "STEAM_0:0:0" && !game.SinglePlayer() then
 		ply:ChatPrint("Your profile has not yet loaded")
 		ply:ChatPrint("If you keep getting this message rejoin")
 		ply.plane:SetKiller("LOAD", 2)
@@ -515,4 +515,3 @@ function GM:ShutDown()
 		SaveProfile(v)
 	end
 end
-

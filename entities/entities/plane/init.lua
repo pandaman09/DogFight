@@ -237,13 +237,13 @@ function ENT:DamageModel()
 		p:ApplyForceCenter(Vector(0,0,-10000))
 		self.Wingless = true
 		self.Engine_Sound:ChangePitch(math.Clamp(math.random(-50,20) + self.speed * 3, 50,1000),1)
-		self.Engine_Sound:ChangeVolume(math.Clamp(self.speed * 3, 100,400))
+		self.Engine_Sound:ChangeVolume(math.Clamp(self.speed * 3, 100,400),1)
 	elseif !IsValid(self.wing2) || !IsValid(self.wing2_weld) then
 		p:ApplyForceOffset(self:GetUp() * -150, self:GetPos() + (self:GetRight() * 250))
 		p:ApplyForceCenter(Vector(0,0,-10000))
 		self.Wingless = true
 		self.Engine_Sound:ChangePitch(math.Clamp(math.random(-50,20) + self.speed * 3, 50,1000),1)
-		self.Engine_Sound:ChangeVolume(math.Clamp(self.speed * 3, 100,400))
+		self.Engine_Sound:ChangeVolume(math.Clamp(self.speed * 3, 100,400),1)
 	end
 	if self.Damage >= self.EXPLODE_DAMAGE && !self.Exploding then
 		self:Explode()

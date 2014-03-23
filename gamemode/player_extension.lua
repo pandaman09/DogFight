@@ -118,3 +118,11 @@ function Pmeta:SendStats( ply )
 	net.Send(ply)
 end
 
+function Pmeta:MoneyMessage(txt, color)
+	local txt = txt or ""
+	local col = ""..(color.r or "255" ).." "..(color.g or "255" ).." "..(color.b or "255" )..""
+	net.Start("monmsg")
+		net.WriteString(txt)
+		net.WriteString(col)
+	net.Send(self)
+end
