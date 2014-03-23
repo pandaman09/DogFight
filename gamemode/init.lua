@@ -141,6 +141,24 @@ for k,v in pairs( RES ) do
 end
 
 --------------------------------
+gamemode.SpawnPoints = {
+							Vector(308.807587, -823.679688, -1857.908691),
+							Vector(-604.365051, -121.023193, -1857.908691),
+							Vector(-99.311798, -563.050171, -1857.908691),
+						}
+
+function GM:InitPostEntity()
+
+	for _,v in pairs( ents.FindByClass( "info_player_start" )) do
+		v:Remove();
+	end
+
+	for _,v in pairs( gamemode.SpawnPoints ) do
+		local spawn = ents.Create("info_player_start")
+		spawn:SetPos( v )
+		spawn:Spawn()
+	end
+end
 
 function GM:MessageAll(txt, chat)
 	for k,v in pairs(player.GetAll()) do
