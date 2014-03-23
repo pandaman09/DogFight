@@ -3,7 +3,7 @@ require( "mysqloo" )
 --tmysql.initialize("127.0.0.1", "gameserver1337", "r5vmH2wrrzCzjsbf", "faintlink", 3306, 5, 6)
 --tmysql.initialize("91.192.210.79", "connor", "sexeh1337", "faintlink", 3306, 11, 10)
 
-local db = mysqloo.connect( "127.0.0.1", "root", "" , "faintlink", 3306)
+local db = mysqloo.connect( "db4free.net", "kila58", "gage1234" , "source", 3306)
 
 function db:onConnectionFailed( errorMessage )
 	Msg("There was an error connecting to the database!\n")
