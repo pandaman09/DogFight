@@ -1,4 +1,6 @@
 
+include("mysql.lua")
+
 AddCSLuaFile( "cl_init.lua" )
 AddCSLuaFile( "cl_panels.lua" )
 AddCSLuaFile( "shared.lua" )
@@ -8,8 +10,6 @@ AddCSLuaFile( "unlocks.lua")
 include( "player_extension.lua" )
 include( "shared.lua" )
 include( "commands.lua" )
-
-include("mysql.lua")
 
 GBU_SPAWNS = {}
 IDC_SPAWNS = {}
@@ -200,9 +200,9 @@ function GM:PlayerInitialSpawn(ply)
 	ply.learnt = false
 	ply.targ_damage = 0
 	--timer.Simple(7,ply.GetOptions,ply)
-	timer.Simple(7, function() ply.GetOptions() end)
+	timer.Simple(7, function() ply:GetOptions() end)
 	--timer.Simple(3,ply.SendStats,ply)
-	timer.Simple(3, function() ply.SendStats() end)
+	timer.Simple(4, function() ply:SendStats() end)
 	if UL_DEBUG then
 		ply.UNLOCKS = {{ID = "COL_RED", EN = 1}, {ID = "TURBO_1", EN = 1}, {ID = "WING_G", EN = 1}}
 	end
