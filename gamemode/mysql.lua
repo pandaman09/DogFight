@@ -243,13 +243,15 @@ function LoadProfiles(ply)
 
 	dbquery("SELECT steamid FROM clients WHERE steamid ='" ..steamid.."'", function(checkprofile)
 		if ( checkprofile[1] == nil ) or ( checkprofile[1][1] == nil ) then
-			tmysql.query("INSERT INTO clients (steamid,name) VALUES('"..steamid.."','"..tmysql.escape(name).."')", function(newplayer,status,error)
-				if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-			end)
+			--tmysql.query("INSERT INTO clients (steamid,name) VALUES('"..steamid.."','"..tmysql.escape(name).."')", function(newplayer,status,error)
+			--	if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
+			--end)
+			dbquery("INSERT INTO clients (steamid,name) VALUES('"..steamid.."','"..db:escape(name).."')")
 		else
-			tmysql.query("UPDATE clients SET name ='"..tmysql.escape(name).."' WHERE steamid ='" ..steamid.."'", function(setname,status,error)
-				if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-			end)
+			--tmysql.query("UPDATE clients SET name ='"..tmysql.escape(name).."' WHERE steamid ='" ..steamid.."'", function(setname,status,error)
+			--	if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
+			--end)
+			dbquery("UPDATE clients SET name ='"..db:escape(name).."' WHERE steamid ='" ..steamid.."'")
 		end
 	end)
 
