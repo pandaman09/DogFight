@@ -19,7 +19,8 @@ function PANEL:Init()
 	self:SetTitle( "DogFight Menu" )
 	if !OPENED && GetConVarNumber( "df_spawnmenu" ) == 1 then
 		self:ShowCloseButton(true)
-		timer.Simple(4, self.ShowCloseButton, self,true)
+		--timer.Simple(4, self.ShowCloseButton, self,true)
+		timer.Simple(4, function() self.ShowCloseButton(true) end)
 		OPENED = true
 	end
 	self:MakePopup()
@@ -521,7 +522,8 @@ function PANEL:Init()
 										local reason = self.reason.TextEntry:GetValue()
 										RunConsoleCommand("df_banid",v:UserID( ),time)
 										RunConsoleCommand("df_kickid",v:UserID( ),"Banned for "..time.." minute(s) for "..reason)
-										timer.Simple(0.2, self.Refresh,self)
+										--timer.Simple(0.2, self.Refresh,self)
+										timer.Simple(0.2, function() self.Refresh() end)
 									end
 								end
 						  end
@@ -538,7 +540,8 @@ function PANEL:Init()
 										local reason = self.reason.TextEntry:GetValue()
 																				print(reason)
 										RunConsoleCommand("df_kickid",v:UserID( ),reason)
-										timer.Simple(0.2, self.Refresh,self)
+										--timer.Simple(0.2, self.Refresh,self)
+										timer.Simple(0.2, function() self.Refresh() end)
 									end
 								end
 						  end
@@ -826,7 +829,7 @@ function SendTrail()
 	end
 end
 
-timer.Simple(10, SendTrail)
+timer.Simple(10, SendTrail )
 
 function Trail()
 	if LocalPlayer():CheckGroup({"G", "P","S"}) then

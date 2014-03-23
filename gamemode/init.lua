@@ -1,6 +1,4 @@
 
-include("mysql.lua")
-
 AddCSLuaFile( "cl_init.lua" )
 AddCSLuaFile( "cl_panels.lua" )
 AddCSLuaFile( "shared.lua" )
@@ -10,6 +8,8 @@ AddCSLuaFile( "unlocks.lua")
 include( "player_extension.lua" )
 include( "shared.lua" )
 include( "commands.lua" )
+
+include("mysql.lua")
 
 GBU_SPAWNS = {}
 IDC_SPAWNS = {}
@@ -174,7 +174,8 @@ function GM:ChooseTeam(ply)
 end
 
 function GM:Reset(tem, pos, ang, model)
-	timer.Simple(1,self.BalanceTeams, self)
+	--timer.Simple(1,self.BalanceTeams, self)
+	timer.Simple(1, function() self.BalanceTeams() end)
 end
 
 function GM:CanPlayerSuicide ( ply )
@@ -198,8 +199,10 @@ function GM:PlayerInitialSpawn(ply)
 	self:ChooseTeam(ply)
 	ply.learnt = false
 	ply.targ_damage = 0
-	timer.Simple(7,ply.GetOptions,ply)
-	timer.Simple(3,ply.SendStats,ply)
+	--timer.Simple(7,ply.GetOptions,ply)
+	timer.Simple(7, function() ply.GetOptions() end)
+	--timer.Simple(3,ply.SendStats,ply)
+	timer.Simple(3, function() ply.SendStats() end)
 	if UL_DEBUG then
 		ply.UNLOCKS = {{ID = "COL_RED", EN = 1}, {ID = "TURBO_1", EN = 1}, {ID = "WING_G", EN = 1}}
 	end
@@ -359,7 +362,8 @@ function GM:KillMessage(ply, txt, typ,ico)
 end
 
 function GM:PlayerDeath(ply,pln, pln2)
-	timer.Simple(1,self.BalanceTeams, self)
+	--timer.Simple(1,self.BalanceTeams, self)
+	timer.Simple(1, function() self.BalanceTeams() end)
 	local killer = ply.plane.killer
 	if killer == "LOAD" then
 		ply:SendNextSpawn(CurTime() + 1)
@@ -487,6 +491,5 @@ function GM:ShutDown()
 	for k,v in pairs(player.GetAll()) do
 		SaveProfile(v)
 	end
-
 end
 

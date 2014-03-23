@@ -1,7 +1,7 @@
 
 local Pmeta = FindMetaTable( "Player" )
 local Emeta = FindMetaTable( "Entity" )
-local ply = LocalPlayer()
+local ply = ply or LocalPlayer()
 
 function Pmeta:SendMessage(txt, chat)
 	if IsValid(self) then return end
@@ -41,7 +41,7 @@ function Pmeta:SendNextSpawn(tme)
 	--umsg.Start("nextspawn", self)
 	--umsg.Long(tme)
 	--umsg.End()
-
+	print("Time:"..tme)
 	net.Start("nextspawn")
 		net.WriteInt(tme,32)
 	net.Send(self)
@@ -100,6 +100,7 @@ function Pmeta:GetOptions()
 end
 
 function Pmeta:SendStats( ply )
+	if !ply:IsValid() then return end
 	if !ply.tot_crash || !ply.tot_targ_damage then Error("Player does not have this variable yet") end
 	--umsg.Start("stats",self)
 	--umsg.Long(ply.tot_crash)
