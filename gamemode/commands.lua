@@ -108,7 +108,7 @@ function GM:ChangeMap(map)
 end
 
 function d_kick(ply,cmd,args)
-	if ValidEntity(ply) && !ply:CheckGroup({"T","A","S"}) then ply:ChatPrint("You do not have permissions for this.") return end
+	if IsValid(ply) && !ply:CheckGroup({"T","A","S"}) then ply:ChatPrint("You do not have permissions for this.") return end
 	local id = args[1]
 	local re = args[2]
 	if !id then Error("No id") return end
@@ -179,10 +179,10 @@ function SetTrail(ply, cmd, args)
 	local b = args[4]
 	ply:ChatPrint("You have set you trail material to "..TrailMat)
 	ply.trail = {COL = Color(r,g,b), MAT = TrailMat..".vmt"}
-	if ValidEntity(ply.plane) then
+	if IsValid(ply.plane) then
 		local col = ply.trail.COl
 		local mat = ply.trail.MAT
-		if ValidEntity(ply.plane.trail) then
+		if IsValid(ply.plane.trail) then
 			ply.plane.trail:Remove()
 		end
 		ply.plane.trail = util.SpriteTrail(ply.plane, 0, ply.trail.COL, false, 30, 1, 4, 1/(15+1)*0.5, mat)

@@ -22,7 +22,7 @@ end
 function ENT:Think()
 	if self.plane then
 		local ply = self.plane.ply
-		if !ValidEntity(ply) then self:Remove() end
+		if !IsValid(ply) then self:Remove() end
 		if ply:KeyDown(IN_ATTACK2) then
 			self:TurnOn()
 		end

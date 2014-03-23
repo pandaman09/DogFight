@@ -166,7 +166,7 @@ function GM:CalcView(ply, origin, angles, fov)
 		if SPEC.STAGE == 1 then
 			if IsValid(LocalPlayer().plane) then
 				--timer.Simple(0.5,STAGE,2)
-				timer.Simple(0.5 function() STAGE(2) end)
+				timer.Simple(0.5, function() STAGE(2) end)
 			end
 			local aim = HUD.PLANE_POS - SPEC.POS
 			aim:Normalize()
