@@ -322,8 +322,9 @@ function GM:PlayerSpawn(ply)
 	if !ang then ang = Angle(0,0,0) end
 	ply:SetAngles(ang)
 	ply:SetModel("models/player/Group03/male_08.mdl")
-	if IsValid(ply.plane) then ply.plane:Remove() end
-	ply.plane = ents.Create("plane")
+	if !IsValid(ply.plane) then
+		ply.plane = ents.Create("plane")
+	end
 	ply.plane:SetPos(ply:GetPos())
 	--ply.plane:SetAngles(spawnpoint.ANG)
 	ply.plane:SetAngles(ang)
