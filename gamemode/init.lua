@@ -142,9 +142,9 @@ end
 
 --------------------------------
 gamemode.SpawnPoints = {
-							Vector(308.807587, -823.679688, 0.908691),
-							Vector(-604.365051, -121.023193, 0.908691),
-							Vector(-99.311798, -563.050171, 0.908691),
+							Vector(308.807587, -823.679688, -1858.908691),
+							Vector(-604.365051, -121.023193, -1858.908691),
+							Vector(-99.311798, -563.050171, -1858.908691),
 						}
 
 function GM:InitPostEntity()
@@ -322,6 +322,7 @@ function GM:PlayerSpawn(ply)
 	if !ang then ang = Angle(0,0,0) end
 	ply:SetAngles(ang)
 	ply:SetModel("models/player/Group03/male_08.mdl")
+	if IsValid(ply.plane) then ply.plane:Remove() end
 	ply.plane = ents.Create("plane")
 	ply.plane:SetPos(ply:GetPos())
 	--ply.plane:SetAngles(spawnpoint.ANG)
