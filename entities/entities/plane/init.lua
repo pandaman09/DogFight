@@ -60,7 +60,7 @@ function ENT:TakeAngleDamping(amount)
 end
 
 function ENT:Initialize()
-	self.Entity:SetModel("models/Bennyg/plane/re_airboat.mdl")
+	self.Entity:SetModel("models/Bennyg/plane/re_airboat2.mdl")
 	self.Entity:PhysicsInit( SOLID_VPHYSICS )
 	self.Entity:SetMoveType( MOVETYPE_VPHYSICS )
 	self.Entity:SetSolid( SOLID_VPHYSICS )
@@ -73,7 +73,7 @@ function ENT:Initialize()
 	self.wing1 = ents.Create("prop_physics")
 	self.wing1:SetPos(self:GetPos() + Vector(0,0,10) + (self:GetRight() * -35))
 	self.wing1:SetAngles(self:GetAngles() + Angle(0,0,10))
-	self.wing1:SetModel("models/Bennyg/plane/re_airboat_pallet.mdl")
+	self.wing1:SetModel("models/Bennyg/plane/re_airboat_pallet2.mdl")
 	--self.wing1:SetParent(self.Entity)
 	self.wing1:SetColor(255,255,255,255)
 	self.wing1.plane = self
@@ -82,14 +82,14 @@ function ENT:Initialize()
 	self.wing2 = ents.Create("prop_physics")
 	self.wing2:SetPos(self:GetPos() + Vector(0,0,10) + (self:GetRight() * 35))
 	self.wing2:SetAngles(self:GetAngles() + Angle(0,0,-10))
-	self.wing2:SetModel("models/Bennyg/plane/re_airboat_pallet.mdl")
+	self.wing2:SetModel("models/Bennyg/plane/re_airboat_pallet2.mdl")
 	self.wing2:SetColor(255,255,255,255)
 	--self.wing2:SetParent(self.Entity)
 	self.wing2.plane = self
 	self.wing2:Spawn()
 	
 	self.tail1 = ents.Create("prop_physics")
-	self.tail1:SetModel("models/Bennyg/plane/re_airboat_tail.mdl")
+	self.tail1:SetModel("models/Bennyg/plane/re_airboat_tail2.mdl")
 	self.tail1:SetPos(self:GetPos() + (self:GetForward() * -55) + Vector(0,0,35))
 	self.tail1:SetAngles(self:GetAngles() + Angle(0,180,0))
 	self.tail1:SetParent(self)
@@ -236,13 +236,13 @@ function ENT:DamageModel()
 		p:ApplyForceOffset(self:GetUp() * -150, self:GetPos() + (self:GetRight() * -250))
 		p:ApplyForceCenter(Vector(0,0,-10000))
 		self.Wingless = true
-		self.Engine_Sound:ChangePitch(math.Clamp(math.random(-50,20) + self.speed * 3, 50,1000))
+		self.Engine_Sound:ChangePitch(math.Clamp(math.random(-50,20) + self.speed * 3, 50,1000),1)
 		self.Engine_Sound:ChangeVolume(math.Clamp(self.speed * 3, 100,400))
 	elseif !IsValid(self.wing2) || !IsValid(self.wing2_weld) then
 		p:ApplyForceOffset(self:GetUp() * -150, self:GetPos() + (self:GetRight() * 250))
 		p:ApplyForceCenter(Vector(0,0,-10000))
 		self.Wingless = true
-		self.Engine_Sound:ChangePitch(math.Clamp(math.random(-50,20) + self.speed * 3, 50,1000))
+		self.Engine_Sound:ChangePitch(math.Clamp(math.random(-50,20) + self.speed * 3, 50,1000),1)
 		self.Engine_Sound:ChangeVolume(math.Clamp(self.speed * 3, 100,400))
 	end
 	if self.Damage >= self.EXPLODE_DAMAGE && !self.Exploding then
@@ -269,10 +269,15 @@ function ENT:Shake(dur, amp, cont)
 end
 
 function ENT:SendValues()
-	umsg.Start("up", self.ply)
-	umsg.Short(self.speed)
-	umsg.Short(self.gun.Ammo)
-	umsg.End()
+	--umsg.Start("up", self.ply)
+	--umsg.Short(self.speed)
+	--umsg.Short(self.gun.Ammo)
+	--umsg.End()
+
+	net.Start("up")
+		net.WriteInt(self.speed, 16)
+		net.WriteInt(self.gun.Ammo, 16)
+	net.Send(self.ply)
 end
 
 ENT.pitch = 0
@@ -317,7 +322,7 @@ function ENT:Think()
 		self:DamageModel() -- check damage etc
 		if self.Damage < 100 then
 			local vel = self.Entity:WorldToLocal(self.Entity:GetVelocity()+self.Entity:GetPos()) -- thanks wiremod
-			self.Engine_Sound:ChangePitch(math.Clamp(math.random(0,self.Damage / 5) + (self.speed * 2) + (vel.x / 500)^3,20,2000))
+			self.Engine_Sound:ChangePitch(math.Clamp(math.random(0,self.Damage / 5) + (self.speed * 2) + (vel.x / 500)^3,20,2000),1)
 		end
 		if self.nkc <=CurTime() && !self.Wingless then
 			self.killer = nil
@@ -344,6 +349,10 @@ end
 
 function ENT:PhysicsSimulate( phys, deltatime )
 	if !IsValid(self.ply) then return end
+	--so shit works
+	self.ply.UPKEY = IN_BACK
+	self.ply.DOWNKEY = IN_FORWARD
+
 	local p = self:GetPhysicsObject()
 	local ply = self.ply
 	local speed = self.speed / self.SPEED_MOD

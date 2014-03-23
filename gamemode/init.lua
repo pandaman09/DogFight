@@ -142,9 +142,9 @@ end
 
 --------------------------------
 gamemode.SpawnPoints = {
-							Vector(308.807587, -823.679688, -1857.908691),
-							Vector(-604.365051, -121.023193, -1857.908691),
-							Vector(-99.311798, -563.050171, -1857.908691),
+							Vector(308.807587, -823.679688, 0.908691),
+							Vector(-604.365051, -121.023193, 0.908691),
+							Vector(-99.311798, -563.050171, 0.908691),
 						}
 
 function GM:InitPostEntity()
@@ -313,15 +313,19 @@ function GM:PlayerSpawn(ply)
 		ply:Spectate(OBS_MODE_ROAMING)
 		return
 	end
-	local spawnpoint = self:SelectSpawn(ply)
-	ply:SetPos(spawnpoint:GetPos())
-	local ang = spawnpoint.ANG
+	--local spawnpoint = self:SelectSpawn(ply)
+	--ply:SetPos(spawnpoint:GetPos())
+	--local ang = spawnpoint.ANG
+	local spoint = gamemode.SpawnPoints[math.random(1,3)]
+	local ang = Angle(0,0,0)
+	ply:SetPos(spoint)
 	if !ang then ang = Angle(0,0,0) end
 	ply:SetAngles(ang)
 	ply:SetModel("models/player/Group03/male_08.mdl")
 	ply.plane = ents.Create("plane")
 	ply.plane:SetPos(ply:GetPos())
-	ply.plane:SetAngles(spawnpoint.ANG)
+	--ply.plane:SetAngles(spawnpoint.ANG)
+	ply.plane:SetAngles(ang)
 	ply.plane:Spawn()
 	ply:SetMoveType(MOVETYPE_OBSERVER)
 	ply.plane:AddPilot(ply)
@@ -488,11 +492,12 @@ function GM:ScalePlaneDamage(plane,dmg)
 end
 
 function GM:PlayerDeathThink(ply)
-	if ply.NextSpawn <= CurTime() then
-		if ply:KeyReleased(IN_ATTACK) then
+	--if !ply.NextSpawn then ply.NexSpawn = CurTime()+1 end
+	--if ply.NextSpawn <= CurTime() then
+	--	if ply:KeyReleased(IN_ATTACK) then
 			ply:Spawn()
-		end
-	end
+	--	end
+	--end
 end
 
 function GM:PlayerDisconnected(ply)

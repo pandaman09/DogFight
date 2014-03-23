@@ -750,9 +750,7 @@ end
 
 local M_MSG = {}
 
-function MoneyMessage(length, client)
-	local txt = net.ReadString()
-	local col = net.ReadString()
+function MoneyMessage(txt, col)
 	col = string.Explode(" ", col)
 	local t = {}
 	t.txt = txt
@@ -764,7 +762,11 @@ end
 
 --usermessage.Hook("monmsg", MoneyMessage)
 
-net.Receive("monmsg", MoneyMessage)
+net.Receive("monmsg", function() 
+	local txt = net.ReadString()
+	local col = net.ReadString()
+	MoneyMessage(txt,col)
+end)
 
 function GM:DrawMoney()
 	local W = ScrW()
