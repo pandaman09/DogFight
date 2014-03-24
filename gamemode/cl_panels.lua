@@ -157,7 +157,7 @@ CreateClientConVar( "df_inverse", 1, true, true )
 
 --CreateClientConVar( "df_mouse_pitch", 0, true, true )
 
-CreateClientConVar( "df_roll_on", 0, true, true )
+CreateClientConVar( "df_roll_on", 1, true, true )
 
 CreateClientConVar( "df_chatbeep", 1, true, false )
 
