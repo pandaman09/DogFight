@@ -1,26 +1,93 @@
+DATABASE_IS_MYSQL = true
+
+local SQLITE_TABLE_CREATE_QUERY = [[
+	CREATE TABLE IF NOT EXISTS clients (
+		name varchar(50),
+		steamid varchar(25) primary key,
+		server varchar(5),
+		groups varchar(6),
+		timeplayed int(100)
+	);
+
+	CREATE TABLE IF NOT EXISTS dogfight (
+		steamid varchar(25) primary key,
+		kills int(10),
+		deaths int(10),
+		money int(10),	
+		unlocks varchar(500),
+		tc int(50),
+		ttd int(50)
+	);
+]]
+
+--[[ 
+	Don't try and create MySql objects if we're not using them!
+]]
+
 require( "mysqloo" )
 
---tmysql.initialize("127.0.0.1", "gameserver1337", "r5vmH2wrrzCzjsbf", "faintlink", 3306, 5, 6)
---tmysql.initialize("91.192.210.79", "connor", "sexeh1337", "faintlink", 3306, 11, 10)
+local db
 
-local db = mysqloo.connect( "127.0.0.1", "root", "" , "faintlink", 3306)
+-- Check if mysqloo was loaded, not sure if there is a better way to do this.
+if( mysqloo ) then
+	db = mysqloo.connect( "127.0.0.1", "root", "test123" , "faintlink", 3306)
 
-function db:onConnectionFailed( errorMessage )
-	Msg("There was an error connecting to the database!\n")
-	Msg(errorMessage .. "\n")
+	function db:onConnectionFailed( errorMessage )
+		Msg("There was an error connecting to the database!\n")
+		Msg(errorMessage .. "\n")
+	end
+
+	function db:onConnected( )
+		Msg("Database Connected!\n")
+	end
+	db:connect()
+else
+	-- Fallback to SQLite
+	DATABASE_IS_MYSQL = false
 end
-function db:onConnected( )
-	Msg("Database Connected!\n")
-end
 
+--[[
+	Func: dbquery
+	Desc: Allows queries with callbacks.
+	Args: string query, function callback
+]]
 function dbquery( query, callback )
+
+	-- Simple SQLite management for people without MySQL. 
+	if( DATABASE_IS_MYSQL ~= true ) then
+		-- Perform the query.
+		local ResultSet = sql.Query( query )
+		
+		-- False means error.
+		if( ResultSet == false ) then
+			print("SQLite error: " .. tostring(sql.LastError()) .. "\n")
+			print("SQL of: "..tostring(query).."\n")
+			return
+		end
+
+		if callback then
+			callback(ResultSet)
+			return
+		end		
+
+		-- Don't try to run Non SQLite functions.
+		return
+	end
+
 	local q = db:query( query )
+	if( not q ) then
+		-- For some reason we were unable to create the query object. Maybe the database is down?
+		-- Revert to SQLite
+		DATABASE_IS_MYSQL = false
+		return
+	end
+
 	function q:onSuccess( data )
-		--stuff
 		if callback then
 			callback(data)
 		end
 	end
+	
 	function q:onError( error, sql)
 		if db:status()==mysqloo.DATABASE_NOT_CONNECTED then
 			print("Database is not connected\n")
@@ -30,28 +97,36 @@ function dbquery( query, callback )
 	end
 
 	q:start()
-
 end
 
-function SetAllOffline()
+--[[
+	Func EscapeString
+	Desc: Decides what escape function we're using.
+	Args: string String
+]]
 
-	--tmysql.query("UPDATE clients SET server = 0 WHERE server = 27025 ", function(setalloffline,status,error)
-	--	if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-	--end)
-
-	dbquery("UPDATE clients SET server = 0 WHERE server = 27025 ")
-
+local function EscapeString( String )
+	if( DATABASE_IS_MYSQL == true ) then
+		return db:escape( String )
+	end
+	return string.Trim( sql.SQLStr( String ), "'" )	
 end
-hook.Add( "ShutDown", "ShuttingDown", SetAllOffline )
-hook.Add( "Initialize", "StartingUp", SetAllOffline )
 
- --[[
-U = User
-G = Gold
-P = Platinum
-T = Trial Admin
-A = Admin
-S = Super Admin
+--[[
+	Make sure SQLLite tables exist.
+]]
+local function CreateSQLiteTables()
+	if( DATABASE_IS_MYSQL ) then return end
+	dbquery( SQLITE_TABLE_CREATE_QUERY, function() end )
+	
+	print( "Does Table 'clients' Exist: ", sql.TableExists( "clients" ) )
+	print( "Does Table 'dogfight' Exist: ", sql.TableExists( "dogfight" ) )
+end
+hook.Add("Initialize", "SQLiteTableCreation", CreateSQLiteTables )
+concommand.Add( "SQLite_Check", CreateSQLiteTables ) -- For debugging
+
+--[[--------------------------------------------------------------------------------------------------
+	Data Management
 ]]
 
 local FLS = {}
@@ -62,311 +137,181 @@ FLS["t"] = "Temp. Admin"
 FLS["a"] = "Admin"
 FLS["s"] = "Superadmin"
 
-function TranslateFlags(ply)
-	if !ply.Flags then return end
+--[[
+	Func: TranslateFlags
+	Desc: Formats the players flags.
+	Args: player Player
+]]
+local function TranslateFlags( ply )
+	if not ply.Flags then return end
 	local t = string.ToTable(string.lower(ply.Flags))
-	local out = {}
+	
+	local FormattedGroups = {}
 	for k,v in pairs(t) do
-		table.insert(out, FLS[v])
-	end
-	return string.Implode(" ", out)
+		table.insert(FormattedGroups, FLS[v])
+	end		
+	
+	return string.Implode(" ", FormattedGroups) or "User"
 end
 
-function Groups(ply)
-	if not ply:IsValid() then return end
+--[[
+	Func: CreateNewUser
+	Desc: Create a new user profile and dogfight profile.
+	Args: player Player
+]]
+function CreateNewUser(ply)
+	if( not IsValid(ply) ) then return end
+	
+	local UserQuery = Format( "INSERT INTO `clients` VALUES( '%s', '%s', 0, 'U', 0 );", EscapeString(ply:Nick()), ply:SteamID(), ply:SteamID() )
+	local DogFightQuery = Format( "INSERT INTO `dogfight` VALUES( '%s', 0, 0, 0, '[]', 0, 0 );", ply:SteamID() )
 
-	local steamid = ply:SteamID()
+	dbquery( UserQuery, function(data) end)
+	dbquery( DogFightQuery, function(data) end)
 
-		--[[tmysql.query("SELECT groups FROM clients WHERE steamid ='" ..steamid.."'", function(groups,status,error)
-
-		ply.Flags = tostring(groups[1][1])
-		ply:ChatPrint("Your flags have loaded! You are in the "..TranslateFlags(ply).." groups!")
-		--umsg.Start("sendflags", ply)
-		--umsg.String(ply.Flags)
-		--umsg.End()
-
-		net.Start("sendflags")
-			net.WriteString(ply.Flags)
-		net.Send(ply)
-
-		if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-
-		end)]]--
-
-	dbquery("SELECT groups FROM clients WHERE steamid ='" ..steamid.."'", function(groups)
-		ply.Flags = tostring(groups[1].groups)
-		ply:ChatPrint("Your flags have loaded! You are in the "..TranslateFlags(ply).." groups!")
-
-		net.Start("sendflags")
-			net.WriteString(ply.Flags)
-		net.Send(ply)
-	end)
-
+	return { [1] = { groups = "U", timeplayed = 0 } }
 end
 
-function StatusOnline(ply)
-	if not ply:IsValid() then return end
-
-  	local steamid = ply:SteamID()
-
-	--tmysql.query("UPDATE clients SET server = 27025 WHERE steamid ='" ..steamid.."'", function(statusonline,status,error)
-	--	if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-	--end)
-
-	dbquery("UPDATE clients SET server = 27025 WHERE steamid ='" ..steamid.."'")
-end
-
-function StatusOffline(ply)
-	if not ply:IsValid() then return end
-
-	SaveProfile(ply)
-  	local steamid = ply:SteamID()
-	local TimeOnline = tonumber(math.Round(TimePlayed + TIME))
-
-	--tmysql.query("UPDATE clients SET timeplayed = "..TimeOnline.." WHERE steamid ='" ..steamid.."'", function(results,status,error)
-	--	if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-	--end)
-
-	dbquery("UPDATE clients SET timeplayed = "..TimeOnline.." WHERE steamid ='" ..steamid.."'")
-
-	--tmysql.query("UPDATE clients SET server = 0 WHERE steamid ='" ..steamid.."'", function(checkprofile,status,error)
-	--	if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-	--end)
-
-	dbquery("UPDATE clients SET server = 0 WHERE steamid ='" ..steamid.."'")
-
-end
-hook.Add("PlayerDisconnected", "PlayerOffline", StatusOffline)
-
-function LoadUnlocks(ply)
-	if not ply:IsValid() then return end
-
-	local steamid = ply:SteamID()
-	--[[tmysql.query("SELECT unlocks FROM dogfight WHERE steamid ='" ..steamid.."'", function(loadunlocks,status,error)
-
-			if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-
-	if (loadunlocks[1] == nil) or (loadunlocks[1][1] == nil) then
-		ply.Allow = true
-	return end
-
-	ply.UNLOCKS = {}
-	local str = loadunlocks[1][1]
-	local new = ""
-	if string.sub(str,1,1) == "," then
-		str = string.sub(str,1,string.len(str))
-		local tab = string.Explode(",", str)
-		for k,v in pairs(tab) do
-			if v != "" and v != nil then
-				new = new..v..",1,"
-			end
-		end
-		new = string.sub(new,1,string.len(new) - 1)
-	end
-	if new != "" then
-		str = new
-	end
-	local tab = string.Explode(",", str)
-	local t = {}
-	for k,v in pairs(tab) do
-		print(v)
-		if v == "1" or v == "0" then
-			t.EN = tonumber(v)
-			table.insert(ply.UNLOCKS, t)
-			t = {}
-		else
-			t.ID = v
-		end
-	end
-	ply.Allow = true
-	end)]]--
-
-	dbquery("SELECT unlocks FROM dogfight WHERE steamid ='" ..steamid.."'", function(loadunlocks)
-		if (loadunlocks[1] == nil) or (loadunlocks[1].unlocks == nil) then
-			ply.Allow = true
-			return
-		end
-
-		ply.UNLOCKS = {}
-		local str = loadunlocks[1].unlocks
-		local new = ""
-		if string.sub(str,1,1) == "," then
-			str = string.sub(str,1,string.len(str))
-			local tab = string.Explode(",", str)
-			for k,v in pairs(tab) do
-				if v != "" and v != nil then
-					new = new..v..",1,"
-				end
-			end
-			new = string.sub(new,1,string.len(new) - 1)
-		end
-		if new != "" then
-			str = new
-		end
-		local tab = string.Explode(",", str)
-		local t = {}
-		for k,v in pairs(tab) do
-			print(v)
-			if v == "1" or v == "0" then
-				t.EN = tonumber(v)
-				table.insert(ply.UNLOCKS, t)
-				t = {}
-			else
-				t.ID = v
-			end
-		end
-		ply.Allow = true
-	end)
-
-end
-
+--[[
+	Func: LoadProfiles
+	Desc: Load the players profile and set them to online.
+	Args: player Player
+	Note: Merged with 
+]]
 function LoadProfiles(ply)
 	if not IsValid(ply) then return end
-
-	ply.Save = CurTime()
+	
 	ply.Allow = false
+	ply.DataWasLoaded = false 			-- Make sure game data was loaded
+	ply.ProfileWasLoaded = false		-- Make sure profile data was loaded (Flags)
 
 	local steamid = ply:SteamID()
-	local name = ply:Nick()
 
-	--[[tmysql.query("SELECT steamid FROM clients WHERE steamid ='" ..steamid.."'", function(checkprofile,status,error)
-		if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-		if ( checkprofile[1] == nil ) or ( checkprofile[1][1] == nil ) then
-			tmysql.query("INSERT INTO clients (steamid,name) VALUES('"..steamid.."','"..tmysql.escape(name).."')", function(newplayer,status,error)
-				if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-			end)
-		else
-			tmysql.query("UPDATE clients SET name ='"..tmysql.escape(name).."' WHERE steamid ='" ..steamid.."'", function(setname,status,error)
-				if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-			end)
-		end
-	end)]]--
-	dbquery("SELECT steamid FROM clients WHERE steamid ='" ..steamid.."'", function(checkprofile)
-		if ( checkprofile[1] == nil ) or ( checkprofile[1].steamid == nil ) then
-			--tmysql.query("INSERT INTO clients (steamid,name) VALUES('"..steamid.."','"..tmysql.escape(name).."')", function(newplayer,status,error)
-			--	if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-			--end)
-			dbquery("INSERT INTO clients (steamid,name) VALUES('"..steamid.."','"..db:escape(name).."')")
-		else
-			--tmysql.query("UPDATE clients SET name ='"..tmysql.escape(name).."' WHERE steamid ='" ..steamid.."'", function(setname,status,error)
-			--	if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-			--end)
-			dbquery("UPDATE clients SET name ='"..db:escape(name).."' WHERE steamid ='" ..steamid.."'")
-		end
-	end)
+	--
+	-- Load User profile
+	--
+	dbquery( "SELECT * FROM clients WHERE steamid = '" .. steamid .. "'", function( PlyProfileData ) 
+		if( not PlyProfileData or PlyProfileData[1] == nil ) then
+			PlyProfileData = CreateNewUser( ply )
+		end	
 
-	--[[tmysql.query("SELECT kills,deaths,money,tc,ttd FROM dogfight WHERE steamid ='" ..steamid.."'", function(loadstuff,status,error)
+		ply.timeplayed = PlyProfileData[1].timeplayed or 0
+		ply.Flags = PlyProfileData[1].groups or "U"
 
-		if ( loadstuff[1] == nil )  then
+		-- Send the flags to the player.		
+		net.Start("sendflags")
+			net.WriteString(ply.Flags)
+		net.Send(ply)
 
-			tmysql.query("INSERT INTO dogfight (steamid,kills,deaths,money,tc,ttd,unlocks) VALUES('"..steamid.."',0,0,0,0,0,'DEFAULT_UNLOCK,1')", function(newdf,status,error)
-				if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-			end)
+		ply.ProfileWasLoaded = true
+		ply.Allow = true
+		
+		ply:ChatPrint( "User profile was loaded and set to the groups " .. TranslateFlags(ply) )
 
-			ply.tot_targ_damage = 0
-			ply.tot_crash = 0
-			kills = 0
-			deaths = 0
-			money = 0
-		else
-			ply.tot_crash = tonumber(loadstuff[1][4])
-			ply.tot_targ_damage = tonumber(loadstuff[1][5])
-			kills = tonumber(loadstuff[1][1])
-			deaths = tonumber(loadstuff[1][2])
-			money = tonumber(loadstuff[1][3])
-		end
-		ply:SetNWInt("kills", kills )
-		ply:SetNWInt("deaths", deaths )
-		ply:SetNWInt("money", money )
+		--
+		--	Load Game stats. Nested to stop it from running before the first query completes.
+		--
+		dbquery( "SELECT * FROM dogfight WHERE steamid = '" .. steamid .. "'", function( PlyData ) 	
+			if( PlyData == nil or not PlyData[1] ) then return end
 
-		timer.Simple(1,ply,SendStats,ply)
-		LoadUnlocks(ply)
+			ply.tot_crash = tonumber(PlyData[1].tc)
+			ply.tot_targ_damage = tonumber(PlyData[1].ttd)
 
-		timer.Simple(3, function()
-			Groups(ply)
-			StatusOnline(ply)
-		end)
+			local money  = PlyData[1].money
+			local kills  = PlyData[1].kills
+			local deaths = PlyData[1].deaths
 
-	end)]]--
+			ply:SetNWInt("kills", kills )
+			ply:SetNWInt("deaths", deaths )
+			ply:SetNWInt("money", money )	
 
-	dbquery("SELECT kills,deaths,money,tc,ttd FROM dogfight WHERE steamid ='" ..steamid.."'", function(loadstuff)
-		if ( loadstuff[1] == nil )  then
-
-			dbquery("INSERT INTO dogfight (steamid,kills,deaths,money,tc,ttd,unlocks) VALUES('"..steamid.."',0,0,0,0,0,'DEFAULT_UNLOCK,1')")
-
-			ply.tot_targ_damage = 0
-			ply.tot_crash = 0
-			kills = 0
-			deaths = 0
-			money = 0
-		else
-			ply.tot_crash = tonumber(loadstuff[1].tc)
-			ply.tot_targ_damage = tonumber(loadstuff[1].ttd)
-			kills = tonumber(loadstuff[1].kills)
-			deaths = tonumber(loadstuff[1].deaths)
-			money = tonumber(loadstuff[1].money)
-		end
-		ply:SetNWInt("kills", kills )
-		ply:SetNWInt("deaths", deaths )
-		ply:SetNWInt("money", money )
-
-		--timer.Simple(1,ply,SendStats,ply)
-		timer.Simple(1, function()
+			ply.UNLOCKS = util.JSONToTable( PlyData[1].unlocks or { } )
+			ply.Allow = true
+			ply.DataWasLoaded = true
 			ply:SendStats(ply)
-		end)
-		LoadUnlocks(ply)
-
-		timer.Simple(3, function()
-			Groups(ply)
-			StatusOnline(ply)
+			
+			ply:ChatPrint( "DogFight game data loaded." .. TranslateFlags(ply) )
 		end)
 	end)
 
+	-- Set User Online
+	timer.Simple( 5, function()
+		dbquery("UPDATE clients SET server = 27025 WHERE steamid = '" .. steamid .. "' ")
+	end)
 end
+hook.Add("PlayerInitialSpawn", "PlayerLoading", LoadProfiles )
 
-hook.Add("PlayerInitialSpawn", "PlayerLoading", LoadProfiles)
-
-function ImplodeTable(Sep,Tab)
-	local Out = ""
-	for k,v in pairs(Tab) do
-		Out = Out..Sep..v.ID..Sep..v.EN
-	end
-	Out = string.sub(Out, 2, string.len(Out))
-	return Out;
-end
-
-function SaveUnlocks(ply)
-	if not ply:IsValid() then return end
-	if ply.UNLOCKS == nil || ply.UNLOCKS == {} then return end
-	local steamid = ply:SteamID()
-	local OUT = ImplodeTable(",",ply.UNLOCKS)
-	if ply.Allow then
-		--tmysql.query("UPDATE dogfight SET unlocks = '"..OUT.."' WHERE steamid ='" ..steamid.."'", function(saveunlocks,status,error)
-		--	if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-		--end)
-
-		dbquery("UPDATE dogfight SET unlocks = '"..OUT.."' WHERE steamid ='" ..steamid.."'")
-
-	end
-end
-
+--[[
+	Func: SaveProfile
+	Desc: Save the players profile and unlocks.
+	Args: player Player
+]]
 function SaveProfile(ply)
 	if not ply:IsValid() then return end
+
+	local name = EscapeString( ply:Nick() )
 	local steamid = ply:SteamID()
-	local kills = ply:GetNWInt("kills")
-	local deaths = ply:GetNWInt("deaths")
-	local money = ply:GetNWInt("money")
 
-	if ply.Allow then
-		--tmysql.query("UPDATE dogfight SET kills = "..kills..", deaths = "..deaths..", money = "..money..", tc = "..ply.tot_crash..", ttd = "..ply.tot_targ_damage.." WHERE steamid ='" ..steamid.."'", function(savemoney,status,error)
-		--	if (error != 0) then print(tostring(error) .. "\n") Error(tostring(error) .. "\n")  return end
-		--end)
+	if( not ply.Allow ) then
+		ply:ChatPrint( "Your profile was never loaded, something went wrong!" )
+		return false
+	end
 
-		dbquery("UPDATE dogfight SET kills = "..kills..", deaths = "..deaths..", money = "..money..", tc = "..ply.tot_crash..", ttd = "..ply.tot_targ_damage.." WHERE steamid ='" ..steamid.."'")
+	-- Save user data
+	-- Make sure we're not overriding valid data because we failed to load it the first time. :<
+	if( ply.ProfileWasLoaded == true ) then
+		print( "Saving player data" )
+		local timeplayed = tonumber(ply.timeplayed + ply:TimeConnected( ))
+		
+		print( "Timeconnected:", timeplayed )
+	
+		local Query = Format( "UPDATE clients SET name = %q, groups = %q, timeplayed = %i WHERE steamid = %q ", name, ply.Flags, math.Round(timeplayed) , steamid )
+		dbquery( Query, function(callback) end)
+	end
 
-	else
-		ply:ChatPrint("Your profile hasn't saved, your profile hasn't loaded!")
+	-- Save game data
+	-- Make sure we're not overriding valid data because we failed to load it the first time. :<
+	if( ply.DataWasLoaded == true ) then
+		local money = ply:GetNWInt("money")
+		local kills = ply:GetNWInt("kills")
+		local deaths = ply:GetNWInt("deaths")
+		local crashes = ply.tot_crash
+		local destoryed = ply.tot_targ_damage
+		local unlocks = EscapeString( util.TableToJSON(ply.UNLOCKS) or "[]" )
+
+		local Query = Format( "UPDATE dogfight SET money = %i, kills = %i, deaths = %i, tc = %i,  ttd = %i, unlocks = %q WHERE steamid = %q", money, kills, deaths, crashes, destoryed, unlocks, steamid ) 
+		dbquery( Query, function(callback) end)
 	end
 end
+hook.Add("PlayerDisconnected", "PlayerOffline", SaveProfile)
 
-db:connect() --calling this last just in case
+--[[
+	Func: SetOffline
+	Desc: Set a user *offline*
+	Args: player ply
+]]
+local function SetOffline( ply )
+	if( not IsValid( ply ) ) then return end
+	dbquery( "UPDATE clients SET server = '0' WHERE steamid = '" .. ply:SteamID() .. "'", function(callback) end)
+end
+hook.Add("PlayerDisconnected", "PlayerOffline", SetOffline)
+
+-- Save everyone on shutdown
+hook.Add( "ShutDown", "ShuttingDown", function()
+	for _, ply in pairs( player.GetAll() ) do
+		SaveProfile(ply)
+	end
+end)
+
+--[[
+	Func: SetAllOffline
+	Desc: Set everyone offline
+	Args:
+]]
+local function SetAllOffline()
+	dbquery("UPDATE clients SET server = 0 WHERE server = 27025 ")
+end
+hook.Add( "ShutDown", "ShuttingDown", SetAllOffline )
+hook.Add( "Initialize", "StartingUp", function() 
+	-- Stop the query from trying to run when the server hasnt initialized the MySQl object.
+	timer.Simple( 1, SetAllOffline ) 
+end)
