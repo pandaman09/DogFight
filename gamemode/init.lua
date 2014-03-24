@@ -316,7 +316,7 @@ function GM:PlayerSpawn(ply)
 	if !ply.Allow && ply:SteamID() != "STEAM_0:0:0" && !game.SinglePlayer() then --moving this here so a plane will not spawn if the player is not allowed to move.
 		ply:ChatPrint("Your profile has not yet loaded")
 		ply:ChatPrint("If you keep getting this message rejoin")
-		ply.plane:SetKiller("LOAD", 2)
+		--ply.plane:SetKiller("LOAD", 2)
 		ply:KillSilent()
 		if ply.Z then
 			LoadProfiles(ply)
