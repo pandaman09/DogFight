@@ -312,6 +312,21 @@ function GM:PlayerSpawn(ply)
 		ply:Spectate(OBS_MODE_ROAMING)
 		return
 	end
+
+	if !ply.Allow && ply:SteamID() != "STEAM_0:0:0" && !game.SinglePlayer() then --moving this here so a plane will not spawn if the player is not allowed to move.
+		ply:ChatPrint("Your profile has not yet loaded")
+		ply:ChatPrint("If you keep getting this message rejoin")
+		ply.plane:SetKiller("LOAD", 2)
+		ply:KillSilent()
+		if ply.Z then
+			LoadProfiles(ply)
+			ply.Z = false
+		else
+			ply.Z = true
+		end
+		return
+	end
+
 	--local spawnpoint = self:SelectSpawn(ply)
 	--ply:SetPos(spawnpoint:GetPos())
 	--local ang = spawnpoint.ANG
@@ -335,19 +350,6 @@ function GM:PlayerSpawn(ply)
 		local col = ply.trail.COL
 		local mat = ply.trail.MAT
 		ply.plane.trail = util.SpriteTrail(ply.plane, 0, col, false, 30, 1, 4, 1/(15+1)*0.5, mat)
-	end
-	if !ply.Allow && ply:SteamID() != "STEAM_0:0:0" && !game.SinglePlayer() then
-		ply:ChatPrint("Your profile has not yet loaded")
-		ply:ChatPrint("If you keep getting this message rejoin")
-		ply.plane:SetKiller("LOAD", 2)
-		ply:KillSilent()
-		if ply.Z then
-			LoadProfiles(ply)
-			ply.Z = false
-		else
-			ply.Z = true
-		end
-		return
 	end
 end
 
