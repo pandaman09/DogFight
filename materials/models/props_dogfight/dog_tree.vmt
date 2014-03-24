@@ -1,0 +1,8 @@
+"VertexLitGeneric"
+{
+	"$alphatest" 1
+	"$basetexture" "models/props_dogfight/dog_tree"
+	"$model" 1
+	"$nocull" 1
+}
+

@@ -1,0 +1,10 @@
+After downloading this zip place these files into garrysmod/gamemode/dogfight.
+
+You may have to copy models, materials and maps into your garrysmod folder.
+
+In order to run this gamemode you must have a MySQL server or run in singleplayer,
+
+You're MySQL database must be named 'faintlink', if you are feeling adventurous you can change the database name in mysql.lua on the 6th line where it says 'faintlink'
+To set up the tables import clients.sql and dogfight.sql into your database.
+
+Running the server on any map other than dfa_rsi will not work because the spawn points are currently hardcoded into the gamemode until map support is fixed.
