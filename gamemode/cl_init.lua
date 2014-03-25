@@ -256,8 +256,14 @@ function GM:CalcView(ply, origin, angles, fov)
 	end
 end
 
+local HIDE = {
+	CHudHealth    = true,
+	CHudBattery   = true,
+	CHudCrosshair = true,
+}
+
 function huddraw(name)
-	if (name == "CHudHealth" or name == "CHudBattery" or name == "CHudCrosshair") then
+	if ( HIDE[ name ] ) then
 		return false
 	end
 	if GetConVarNumber( "df_film" ) == 1 then
