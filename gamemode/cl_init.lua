@@ -505,7 +505,7 @@ function GM:DoNotifyBox()
 	end
 end
 
-local tex = surface.GetTextureID("DFHUD/crosshair")
+local tex = surface.GetTextureID("DFHUD/crosshair2")
 
 local CRS = 24
 

@@ -20,7 +20,7 @@ function PANEL:Init()
 	if !OPENED && GetConVarNumber( "df_spawnmenu" ) == 1 then
 		self:ShowCloseButton(true)
 		--timer.Simple(4, self.ShowCloseButton, self,true)
-		timer.Simple(4, function() self.ShowCloseButton(true) end)
+		--timer.Simple(4, function() self.ShowCloseButton(true) end) --this is already true why do it again?
 		OPENED = true
 	end
 	self:MakePopup()
@@ -779,29 +779,35 @@ Trails["LoL"]  		= "trails/lol"
 function PANEL:Init()
     self:SetPos( ScrW() / 2 - (400 / 2),ScrH() / 2 - (250 / 2))
     self:SetSize( 400,250 )
-	self:SetTitle( "Trail Selection" )
+	--self:SetTitle( "Trail Selection" )
+	self.lblTitle:SetPos(5,2)
+	self.lblTitle:SetSize(self:GetWide(),20)
+	self.lblTitle:SetText( "Trail Selection" )--not sure why this lable is bad, but it's fixed now :D
 	self:MakePopup()
 	self:ShowCloseButton(false)
 	local lab = vgui.Create("DLabel", self)
 	lab:SetText("Material")
-	lab:SetPos(12,20)
+	lab:SetPos(30,(self:GetTall() - (self:GetTall() * 0.1))* 0.3)
 	self.TrailCombo = vgui.Create("DComboBox", self)
-	self.TrailCombo:SetPos( 10, 37 )
-	self.TrailCombo:SetSize( self:GetWide() * 0.2, self:GetTall() * 0.8 )
-	self.TrailCombo:SetMultiple(false)
+	self.TrailCombo:SetPos( 10, (self:GetTall() - (self:GetTall() * 0.1))* 0.4 )
+	self.TrailCombo:SetSize( self:GetWide() * 0.2, self:GetTall() * 0.1 )
+	self.TrailCombo.OnSelect = function( panel, index, value, data )
+		self.TrailCombo.ChoiceSelected = data
+	end
+	--self.TrailCombo:SetMultiple(false)
 
 	for k,v in pairs(Trails) do
 		local Name = string.Trim(k)
 		TrailMat = v
-		self.TrailCombo:AddItem(Name)
+		self.TrailCombo:AddChoice(Name)
 	end
 
 	self.ChangeTrail = vgui.Create("DButton", self)
 	self.ChangeTrail:SetText( "Change Trail" )
-	self.ChangeTrail:SetPos( 95, 160 )
-	self.ChangeTrail:SetSize( 300, 80 )
+	self.ChangeTrail:SetPos( 10, 160 )
+	self.ChangeTrail:SetSize( 380, 80 )
 	function self.ChangeTrail.DoClick()
-		local Table = self.TrailCombo:GetSelectedItems()[1]
+		local Table = self.TrailCombo.ChoiceSelected
 		if !Table then
 			self:Close()
 			return
@@ -856,7 +862,9 @@ net.Receive("team", Trail)
  function PANEL:Init()
 
  	self.Mixer = vgui.Create( "DColorMixer", self )
-
+ 	self.Mixer:SetPalette( true )
+	self.Mixer:SetAlphaBar( false )
+	self.Mixer:SetWangs( false )
  	self.txtR = vgui.Create( "DNumberWang", self )
  	self.txtR:SetDecimals( 0 )
  	self.txtR:SetMinMax( 0, 255 )
@@ -917,7 +925,8 @@ net.Receive("team", Trail)
 
  	self:SetTall( 110 )
 
- 	self.Mixer:SetSize( 150, 100 )
+ 	--self.Mixer:SetSize( 130, 150 )
+ 	self.Mixer:SetSize( 250, 100 )
  	self.Mixer:Center()
  	self.Mixer:AlignLeft( 5 )
 
