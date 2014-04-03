@@ -114,7 +114,7 @@ function GM:InitPostEntity()
 	local map = game.GetMap()
 
 	if !IsValid(Spawns.maps[map]) or Count(Spawns.maps[map])==0 then
-		Msg("No Spawn points for this map! Please create some.")
+		Msg("No Spawn points for this map! Please create some.\n")
 		return
 	end
 
