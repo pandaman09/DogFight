@@ -39,15 +39,16 @@ function GM:GetTeamScoreInfo()
 		end		
 		
 		local PlayerInfo = {}
-		PlayerInfo.Frags = _frags
-		PlayerInfo.Deaths = _deaths
-		PlayerInfo.Score = _frags
-		PlayerInfo.Ping = _ping
+		PlayerInfo.Frags = _frags or 0
+		PlayerInfo.Deaths = _deaths  or 0
+		PlayerInfo.Score = _frags  or 0
+		PlayerInfo.Ping = _ping  or 0
 		PlayerInfo.Name = pl:Nick()
 		PlayerInfo.PlayerObj = pl
 		
 		local insertPos = #TeamInfo[_team].Players + 1
 		for idx,info in pairs(TeamInfo[_team].Players) do
+			if( not IsEntity( info ) or info:IsBot() ) then insertPos = idx break end
 			if (PlayerInfo.Frags > info.Frags) then
 				insertPos = idx
 				break
@@ -242,4 +243,3 @@ function GM:HUDDrawScoreBoard()
 	GAMEMODE.ScoreDesign.Height = GAMEMODE.ScoreDesign.Height / 3
 	
 end
-
