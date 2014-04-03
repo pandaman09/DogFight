@@ -26,24 +26,6 @@ local SQLITE_TABLE_CREATE_QUERY = [[
 require( "mysqloo" )
 
 local db
-
--- Check if mysqloo was loaded, not sure if there is a better way to do this.
-if( mysqloo ) then
-	db = db or mysqloo.connect( "127.0.0.1", "root", "test123" , "faintlink", 3306)
-
-	function db:onConnectionFailed( errorMessage )
-		Msg("There was an error connecting to the database!\n")
-		Msg(errorMessage .. "\n")
-	end
-
-	function db:onConnected( )
-		print( "Database Connected!" )
-	end
-	db:connect()
-else
-	-- Fallback to SQLite
-	DATABASE_IS_MYSQL = false
-end
  
 --[[
 	Func: dbquery
@@ -123,6 +105,27 @@ local function CreateSQLiteTables()
 end
 hook.Add("Initialize", "SQLiteTableCreation", CreateSQLiteTables )
 concommand.Add( "SQLite_Check", CreateSQLiteTables ) -- For debugging
+
+-- Check if mysqloo was loaded, not sure if there is a better way to do this.
+if( mysqloo ) then
+	db = db or mysqloo.connect( "127.0.0.1", "root", "test123" , "faintlink", 3306)
+
+	function db:onConnectionFailed( errorMessage )
+		Msg("There was an error connecting to the database!\n")
+		Msg(errorMessage .. "\n")
+		Msg("Switching to SQLite fallback.\n")
+		DATABASE_IS_MYSQL = false
+		CreateSQLiteTables()
+	end
+
+	function db:onConnected( )
+		print( "Database Connected!" )
+	end
+	db:connect()
+else
+	-- Fallback to SQLite
+	DATABASE_IS_MYSQL = false
+end
 
 --[[--------------------------------------------------------------------------------------------------
 	Data Management

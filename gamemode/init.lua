@@ -111,7 +111,13 @@ function GM:InitPostEntity()
 	local Spawns = gamemode.SpawnPoints
 
 	-- Create the spawns if it's team based.
-	local map = game.GetMap()	
+	local map = game.GetMap()
+
+	if !IsValid(Spawns.maps[map]) or Count(Spawns.maps[map])==0 then
+		Msg("No Spawn points for this map! Please create some.")
+		return
+	end
+
 	if( map and TEAM_BASED ) then
 		local TeamSpawns = Spawns.maps[map].TeamBased
 		for _, Location in pairs( TeamSpawns[1] ) do
@@ -256,8 +262,9 @@ function GM:PlayerSelectSpawn(ply)
 		end
 		
 		local SpawnPoints = ents.FindByClass( SearchEntity )
-		if( not SpawnPoints ) then return Vector( 0,0,1500 ) end
-		return SpawnPoints[math.random( 1, #SpawnPoints ) ]:GetPos() or Vector( 0, 0, 0 )
+		local SpawnCount = table.Count(SpawnPoints)
+		if( not (SpawnCount>0) ) then return Vector( 0,0,1500 ) end
+		return SpawnPoints[math.random( 1, SpawnCount ) ]:GetPos() or Vector( 0, 0, 0 )
 	end
 	return ents.FindByClass( SearchEntity )[math.random( 1, #ents.FindByClass( SearchEntity ) )]:GetPos()
 end
