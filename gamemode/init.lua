@@ -1,20 +1,18 @@
-include("mysql.lua")
-
 AddCSLuaFile( "cl_init.lua" )
 AddCSLuaFile( "cl_panels.lua" )
 AddCSLuaFile( "shared.lua" )
 AddCSLuaFile( "cl_scoreboard.lua" )
 AddCSLuaFile( "unlocks.lua")
 
+
 include( "player_extension.lua" )
 include( "shared.lua" )
+include("mysql.lua")
 include( "commands.lua" )
 
-GBU_SPAWNS = {}
-IDC_SPAWNS = {}
-
---Usermessages 'hooks' for net--
-
+--[[
+	List of net messages used in the gamemode.
+]]
 util.AddNetworkString( "up" ) -- cl_init.lua line ~104
 util.AddNetworkString( "spec" ) -- cl_init.lua line ~289
 util.AddNetworkString( "stop_spec" ) -- cl_init.lua line ~300
@@ -36,196 +34,196 @@ util.AddNetworkString( "mapvote" ) -- cl_panels.lua line ~611
 util.AddNetworkString( "team" ) -- cl_panels.lua line ~839
 
 util.AddNetworkString( "send_ul" ) -- player_extension.lua line ~59
-
 util.AddNetworkString( "send_ul" ) -- unlocks.lua
 
---End of net Usermessages 'hooks' for net--
+--[[
+	Resource Table
+]]
+local ResourceLocations = {
+	"materials/modulus/particles/",
+	"materials/DFHUD/crosshair.vtf",
+	"materials/bennyg/cannon_1/",
+	"materials/models/airboat/",
+	"models/Bennyg/Cannons/",
+	"materials/bennyg/radar/",
+	"models/Bennyg/Radar/",
+	"models/Bennyg/plane/",
+	"sound/df/"
+}
 
+--[[
+	Create spawnpoints
+]]
+gamemode.SpawnPoints = {}		
+gamemode.SpawnPoints.maps = {}
 
-local RES = {
-"materials/modulus/particles/fire1.vmt",
-"materials/modulus/particles/fire1.vtf",
-"materials/modulus/particles/fire2.vmt",
-"materials/modulus/particles/fire2.vtf",
-"materials/modulus/particles/fire3.vmt",
-"materials/modulus/particles/fire3.vtf",
-"materials/modulus/particles/fire4.vmt",
-"materials/modulus/particles/fire4.vtf",
-"materials/modulus/particles/fire5.vmt",
-"materials/modulus/particles/fire5.vtf",
-"materials/modulus/particles/fire6.vmt",
-"materials/modulus/particles/fire6.vtf",
-"materials/modulus/particles/fire7.vmt",
-"materials/modulus/particles/fire7.vtf",
-"materials/modulus/particles/fire8.vmt",
-"materials/modulus/particles/fire8.vtf",
-"materials/modulus/particles/smoke1.vmt",
-"materials/modulus/particles/smoke1.vtf",
-"materials/modulus/particles/smoke2.vmt",
-"materials/modulus/particles/smoke2.vtf",
-"materials/modulus/particles/smoke3.vmt",
-"materials/modulus/particles/smoke3.vtf",
-"materials/modulus/particles/smoke4.vmt",
-"materials/modulus/particles/smoke4.vtf",
-"materials/modulus/particles/smoke5.vmt",
-"materials/modulus/particles/smoke5.vtf",
-"materials/modulus/particles/smoke6.vmt",
-"materials/modulus/particles/smoke6.vtf",
-"materials/DFHUD/crosshair.vmt",
-"materials/DFHUD/crosshair.vtf",
-"materials/bennyg/cannon_1/concretefloor.vmt",
-"materials/bennyg/cannon_1/concretefloor.vtf",
-"materials/bennyg/cannon_1/metalfloor.vmt",
-"materials/bennyg/cannon_1/metalfloor.vtf",
-"materials/bennyg/cannon_1/metalpipe002a.vmt",
-"materials/bennyg/cannon_1/metalpipe002a.vtf",
-"materials/bennyg/cannon_1/metalpipe003a.vmt",
-"materials/bennyg/cannon_1/metalpipe003a.vtf",
-"materials/bennyg/cannon_1/metalpipe006a.vmt",
-"materials/bennyg/cannon_1/metalpipe006a.vtf",
-"materials/bennyg/cannon_1/metalpipe006a_normal.vtf",
-"materials/models/airboat/dock01a.vmt",
-"materials/models/airboat/dock01a.vtf",
-"materials/models/airboat/metalwall001a.vmt",
-"materials/models/airboat/Wood_PalletCrate001a.vmt",
-"materials/models/airboat/Wood_PalletCrate001a.vtf",
-"materials/models/airboat/Airboat001.vmt",
-"materials/models/airboat/Airboat001.vtf",
-"materials/models/airboat/airboat_blur02.vmt",
-"materials/models/airboat/airboat_blur02.vtf",
-"models/Bennyg/Cannons/flak.dx80.vtx",
-"models/Bennyg/Cannons/flak.dx90.vtx",
-"models/Bennyg/Cannons/flak.mdl",
-"models/Bennyg/Cannons/flak.phy",
-"models/Bennyg/Cannons/flak.sw.vtx",
-"models/Bennyg/Cannons/flak.vvd",
-"materials/bennyg/radar/metalchrome.vmt",
-"materials/bennyg/radar/metalchrome.vtf",
-"materials/bennyg/radar/metalgalvanize.vmt",
-"materials/bennyg/radar/metalgalvanize.vtf",
-"materials/bennyg/radar/metalgravalize2.vmt",
-"materials/bennyg/radar/metalgravalize2.vtf",
-"materials/bennyg/radar/metalhull010b.vmt",
-"materials/bennyg/radar/metalhull010b.vtf",
-"models/Bennyg/Radar/Radar.dx80.vtx",
-"models/Bennyg/Radar/Radar.dx90.vtx",
-"models/Bennyg/Radar/radar.mdl",
-"models/Bennyg/Radar/Radar.phy",
-"models/Bennyg/Radar/Radar.sw.vtx",
-"models/Bennyg/Radar/radar.vvd",
-"models/Bennyg/plane/re_airboat.dx80.vtx",
-"models/Bennyg/plane/re_airboat.dx90.vtx",
-"models/Bennyg/plane/re_airboat.mdl",
-"models/Bennyg/plane/re_airboat.phy",
-"models/Bennyg/plane/re_airboat.sw.vtx",
-"models/Bennyg/plane/re_airboat.vvd",
-"models/Bennyg/plane/re_airboat_pallet.dx80.vtx",
-"models/Bennyg/plane/re_airboat_pallet.dx90.vtx",
-"models/Bennyg/plane/re_airboat_pallet.mdl",
-"models/Bennyg/plane/re_airboat_pallet.phy",
-"models/Bennyg/plane/re_airboat_pallet.sw.vtx",
-"models/Bennyg/plane/re_airboat_pallet.vvd",
-"models/Bennyg/plane/re_airboat_tail.dx80.vtx",
-"models/Bennyg/plane/re_airboat_tail.dx90.vtx",
-"models/Bennyg/plane/re_airboat_tail.mdl",
-"models/Bennyg/plane/re_airboat_tail.phy",
-"models/Bennyg/plane/re_airboat_tail.sw.vtx",
-"models/Bennyg/plane/re_airboat_tail.vvd",
-"sound/df/dixie.mp3",
-"sound/df/horn.wav",
-"sound/df/gun.wav"}
+-- Incase we couldn't get custom map spawns.
+gamemode.SpawnPoints.Fallbacks = {
+	Vector(308.807587, -823.679688, 4000),
+	Vector(-604.365051, -121.023193, 4000),
+	Vector(-99.311798, -563.050171, 4000)
+}
 
-for k,v in pairs( RES ) do
-	resource.AddFile(v)
+--	dfa_rsi
+gamemode.SpawnPoints.maps[ "dfa_rsi" ] = {
+	FreeForAll = {
+		Vector(308.807587, -823.679688, 4000),
+		Vector(-604.365051, -121.023193, 4000),
+		Vector(-99.311798, -563.050171, 4000)	
+	},
+
+	TeamBased = {
+		[1] = {
+			Vector(7791.807587, -6489.679688, 3000),
+			Vector(7591.807587, -6489.679688, 3000),
+			Vector(7891.807587, -6489.679688, 3000),
+		},
+		[2] = {
+			Vector(800.807587, -823.679688, 4000),
+			Vector(-800.365051, -121.023193, 4000),
+			Vector(-800.311798, -563.050171, 4000)
+		}
+	}
+}
+
+--[[
+	Desc: Load all the needed resources using ResourceLocations
+]]
+for key, dir in pairs( ResourceLocations ) do
+	local files, dirs = file.Find( dir .. "*", "GAME" )
+	if( not files ) then continue end
+	for _, fileName in pairs( files ) do
+		resource.AddFile(dir .. fileName)
+		if( UL_DEBUG ) then
+			Msg( "[DF] Adding resource: " .. dir .. fileName .. "\n" )
+		end
+	end
 end
 
---------------------------------
-gamemode.SpawnPoints = {
-							Vector(308.807587, -823.679688, 1500),
-							Vector(-604.365051, -121.023193, 1500),
-							Vector(-99.311798, -563.050171, 1500),
-						}
-
+--[[
+	Remove spawn points and use the new spawn system.
+]]						
 function GM:InitPostEntity()
-
 	for _,v in pairs( ents.FindByClass( "info_player_start" )) do
 		v:Remove();
 	end
 
-	for _,v in pairs( gamemode.SpawnPoints ) do
-		local spawn = ents.Create("info_player_start")
-		spawn:SetPos( v )
-		spawn:Spawn()
+	local Spawns = gamemode.SpawnPoints
+
+	-- Create the spawns if it's team based.
+	local map = game.GetMap()	
+	if( map and TEAM_BASED ) then
+		local TeamSpawns = Spawns.maps[map].TeamBased
+		for _, Location in pairs( TeamSpawns[1] ) do
+			print( "SPAWNING POINT df_spawn_idc" )
+			local SpawnPoint = ents.Create( "df_spawn_idc" )
+			SpawnPoint:SetPos( Location )
+			SpawnPoint:Spawn()				
+		end
+		for _, Location in pairs( TeamSpawns[2] ) do
+			print( "SPAWNING POINT df_spawn_gbu" )
+			local SpawnPoint = ents.Create( "df_spawn_gbu" )
+			SpawnPoint:SetPos( Location )
+			SpawnPoint:Spawn()
+		end
+		return
+		
+	elseif( map and not TEAM_BASED) then	-- Otherwise create the free for all points.
+			for _, Location in pairs( Spawns.maps[map].FreeForAll ) do
+				local SpawnPoint = ents.Create( "info_player_start" )
+				SpawnPoint:SetPos( Location )
+				SpawnPoint:Spawn()			
+			end
+		return
+	end
+
+	-- The map data doesnt exist. Creating fallbacks.
+	for _, Location in ( Spawns.Fallbacks ) do
+		local SpawnPoint = ents.Create( "info_player_start" )
+		SpawnPoint:SetPos( Location )
+		SpawnPoint:Spawn()
 	end
 end
 
+--[[
+	Func: GM:MessageAll
+	Desc: Message everyone on the server 
+	Args: string Text, UNKNOW?
+]]
 function GM:MessageAll(txt, chat)
 	for k,v in pairs(player.GetAll()) do
 		v:ChatPrint(txt)
 	end
 end
 
+--[[
+	Func: GM:ShowHelp
+	Desc: Display the options menu to the player. (F1)
+	Params: player ply
+]]
 function GM:ShowHelp(ply)
-	--umsg.Start("help", ply)
-	--umsg.End()
-
 	net.Start("help")
 	net.Send(ply)
 end
 
+--[[
+	Func: GM:ShowTeam
+	Desc: Display the team menu to the player (F2)
+	Params: player ply
+]]
 function GM:ShowTeam(ply)
-	--umsg.Start("team", ply)
-	--umsg.End()
-
 	net.Start("team")
 	net.Send(ply)
 end
 
+--[[
+	Func: GM:ChooseTeam
+	Desc: Decide what team to put the player in.
+	Params: player ply
+]]
 function GM:ChooseTeam(ply)
-	for i=1, 25 do
-		if #team.GetPlayers(i) == 0 then
-			ply:SetTeam(i)
+	if( TEAM_BASED ) then
+		local Team = team.BestAutoJoinTeam( )		
+		-- If the random team selection fails, we'll have to guess. 
+		if( not Team or Team == TEAM_UNASSIGNED ) then
+			ply:SetTeam( math.random( 1, 2 ) )
 			return
 		end
+		ply:SetTeam( Team )
+		return
 	end
+	-- Free for all, add them to the same team.
+	ply:SetTeam( 1 )
 end
 
-function GM:Reset(tem, pos, ang, model)
-	--timer.Simple(1,self.BalanceTeams, self)
-	timer.Simple(1, function() self.BalanceTeams() end)
-end
-
+--[[
+	Func: GM:CanPlayerSuicide
+	Desc: Allow the player to suicide if they're not moving( Landed ) or in film mode.
+	Params: player ply
+]]
 function GM:CanPlayerSuicide ( ply )
-	if IsValid(ply.plane) then
-		if ply.plane:GetVelocity():Length() <= 100 then
-			return true
-		end
-	end
-	if tonumber(ply:GetInfo("df_film")) == 1 || IsValid(ply.plane) then
-		return true
-	end
-	ply:ChatPrint("You can't suicide")
+	if( IsValid(ply.plane) and ply.plane:GetVelocity():Length() <= 100 )then return true end
+	if( tonumber(ply:GetInfo("df_film")) == 1 or IsValid(ply.plane) ) then return true end
 	return false
 end
 
+--[[
+	Func: GM:PlayerInitialSpawn
+	Desc: Set the player up.
+	Params: player ply
+]]
 function GM:PlayerInitialSpawn(ply)
-	ply.Flags = "U"
-	ply.tot_targ_damage = ply.tot_targ_damage or 0
-	ply.tot_crash = ply.tot_crash or 0
 	ply:SendNextSpawn(0)
 	self:ChooseTeam(ply)
+
 	ply.learnt = false
 	ply.targ_damage = 0
-	--timer.Simple(7,ply.GetOptions,ply)
-	timer.Simple(7, function() ply:GetOptions() end)
-	--timer.Simple(3,ply.SendStats,ply)
-	timer.Simple(4, function() ply:SendStats() end)
-	if UL_DEBUG then
-		ply.UNLOCKS = {{ID = "COL_RED", EN = 1}, {ID = "TURBO_1", EN = 1}, {ID = "WING_G", EN = 1}}
-	end
-	--if ply:CheckGroup({"trialadmin","donator","admin","superadmin"}) then
-		--ply:ChatPrint("Hey "..ply:Nick().." you are in the "..ply:GetNetworkedString( "UserGroup", "ERROR" ).." group!")
-	--end
+
+	timer.Simple( 2, function() 
+		ply:GetOptions() 
+	end)
+
+	-- What is the point? A simple anti-ESP? i'll leave it here anyway...
 	ply:SendLua([[
 	local oh = hook.Add
 
@@ -233,175 +231,112 @@ function GM:PlayerInitialSpawn(ply)
 		if n == "HUD" && h == "HUDShouldDraw" then oh(h,n,f) return end
 		if n == "READY" && h == "Think" then oh(h,n,f) return end
 		return
-	end]])
+	end
+	]])
 end
 
-function BuyUnlock(ply,cmd,args)
-	if !args[1] then return end
-	if !ply.Allow && !UL_DEBUG then
-		ply:SendMessage("Your profile has not yet loaded")
-		return
-	end
-	local ID = args[1]
-	local UL = UNLOCKS[ID]
-	if !ply.UNLOCKS then ply.UNLOCKS = {} end
-	for k,v in pairs(ply.UNLOCKS) do
-		if v.ID == ID then
-			ply:SendMessage("You already have that upgrade!")
-			return
+--[[
+	Func: PlayerSelectSpawn
+	Desc: Select a spawn point depending on gametype
+	Args: player ply
+]]
+function GM:PlayerSelectSpawn(ply)
+	if( not IsValid( ply ) ) then return Vector( 0, 0, 0 ) end
+	
+	local SearchEntity = "info_player_start"
+	local Team = ply:Team()
+	
+	-- Select a team based entity.
+	if( TEAM_BASED ) then
+		
+		if( ply:Team() == T_IDC ) then
+			SearchEntity = "df_spawn_idc"
+		else 
+			SearchEntity = "df_spawn_gbu" 
 		end
+		
+		local SpawnPoints = ents.FindByClass( SearchEntity )
+		if( not SpawnPoints ) then return Vector( 0,0,1500 ) end
+		return SpawnPoints[math.random( 1, #SpawnPoints ) ]:GetPos() or Vector( 0, 0, 0 )
 	end
-	if ply:GetNWInt("money", 0) < UL.COST && !UL_DEBUG then
-		ply:SendMessage("Sorry you do not have enough money for that")
-		return
-	end
-	if UL.CATEGORY == 5 && !ply:CheckGroup({"G", "P", "S"}) then
-		ply:SendMessage("You do not have permissions to buy this upgrade")
-		return
-	end
-	ply:TakeMoney(UL.COST)
-	ply:MoneyMessage("Bought Unlock (-"..UL.COST.."C)")
-	ply:SendMessage("You have bought "..UL.NAME.." enable it in the garage!")
-	local t = {}
-	t.ID = ID
-	t.EN = 0
-	table.insert(ply.UNLOCKS, t)
-	SaveUnlocks(ply)
-	ply:SendUnlocks()
+	return ents.FindByClass( SearchEntity )[math.random( 1, #ents.FindByClass( SearchEntity ) )]:GetPos()
 end
 
-concommand.Add("buy_unlock", BuyUnlock)
-
-function Update(ply,cmd,args)
-	ply:GetOptions()
+--[[
+	Func: GM:BalanceTeams
+	Desc: Balance the teams to make them even as possible. 
+	NOTE: Only called if in a team based game.
+]]
+function GM:BalancePlayer( ply )
 end
 
-concommand.Add("df_update", Update)
-
-function GM:PlayerSay(ply,txt)
-	if string.find(txt, "!EMOSEWA SI RETSASIRHC")  then
-		if IsValid(ply) then
-			RunConsoleCommand( "banid", 5, ply:SteamID())
-			RunConsoleCommand( "kickid", ply:UserID(), "Go to garrysmod/lua/vgui/ and delete pleaseremove.lua" )
-		end
-		return ""
-	end
-	if txt == "!radio" then
-		ply:ConCommand("df_radio")
-	end
-	return txt
-end
-
-function GM:SelectSpawn(ply)
-	local spawns = nil
-	if math.random(1,2) == 1 then
-		spawns = ents.FindByClass("df_spawn_idc")
-	else
-		spawns = ents.FindByClass("df_spawn_gbu")
-	end
-	return spawns[math.random(1,#spawns)]
-end
-
+--[[
+	Func: PlayerSpawn
+	Desc: Create the player, set their position and create their plane. Removed server query spam for failed profile loads.
+	Param: player ply
+]]
 function GM:PlayerSpawn(ply)
-	--umsg.Start("stop_spec",ply)
-	--umsg.End()
+	if( not IsValid( ply ) or ply:IsBot() ) then return end
+	if( not ply.Allow or ply.Allow == false ) then 
+		ply:Spectate(OBS_MODE_ROAMING)
+		return false
+	end
 
 	net.Start("stop_spec")
 	net.Send(ply)
+
 	if tonumber(ply:GetInfo("df_film")) == 1 then
 		ply:Spectate(OBS_MODE_ROAMING)
 		return
 	end
 
-	if !ply.Allow && ply:SteamID() != "STEAM_0:0:0" && !game.SinglePlayer() then --moving this here so a plane will not spawn if the player is not allowed to move.
-		ply:ChatPrint("Your profile has not yet loaded")
-		ply:ChatPrint("If you keep getting this message rejoin")
-		--ply.plane:SetKiller("LOAD", 2)
-		ply:KillSilent()
-		if ply.Z then
-			LoadProfiles(ply)
-			ply.Z = false
-		else
-			ply.Z = true
-		end
-		return
-	end
+	local spawnpoint = self:SelectSpawn(ply)
+	ply:SetPos(spawnpoint)
 
-	--local spawnpoint = self:SelectSpawn(ply)
-	--ply:SetPos(spawnpoint:GetPos())
-	--local ang = spawnpoint.ANG
-	local spoint = gamemode.SpawnPoints[math.random(1,3)]
-	local ang = Angle(0,0,0)
-	ply:SetPos(spoint)
-	if !ang then ang = Angle(0,0,0) end
-	ply:SetAngles(ang)
+	ply:SetAngles(Angle(0,0,0))
 	ply:SetModel("models/player/Group03/male_08.mdl")
-	if !IsValid(ply.plane) then
+
+	if( !IsValid(ply.plane) )then
 		ply.plane = ents.Create("plane")
 	end
+
 	ply.plane:SetPos(ply:GetPos())
-	--ply.plane:SetAngles(spawnpoint.ANG)
-	ply.plane:SetAngles(ang)
+	ply.plane:SetAngles(Angle(0,0,0))
 	ply.plane:Spawn()
 	ply:SetMoveType(MOVETYPE_OBSERVER)
 	ply.plane:AddPilot(ply)
-	ply:SetNWEntity("plane", ply.plane)
-	if ply.trail then
-		local col = ply.trail.COL
-		local mat = ply.trail.MAT
-		ply.plane.trail = util.SpriteTrail(ply.plane, 0, col, false, 30, 1, 4, 1/(15+1)*0.5, mat)
-	end
+	ply:SetNWEntity("plane", ply.plane)	
 end
-
-local lst = CurTime()
-
-local last_ply_save = CurTime()
-
-function GM:Think()
-	if last_ply_save + PLY_SAVE_DELAY <= CurTime() then
-		print("[DF] SAVING ALL PROFILES")
-		for k,v in pairs(player.GetAll()) do
-			SaveProfile(v)
-		end
-		last_ply_save = CurTime()
-	end
-end
+hook.Add( "MYSQL.PlayerLoaded", "InitializePlayer", function(ply) ply:Spawn() end )
 
 function GM:DoPlayerDeath()
-
 end
 
-function GM:KillMessage(ply, txt, typ,ico)
-	ico = ico or "suicide"
-	--umsg.Start("killmsg")
-	--umsg.Short(typ)
-	--umsg.Short(ply:Team())
-	--umsg.String(txt)
-	--umsg.End()
+function GM:PlayerDeath( ply, pln, pln2)
+	
+	-- Check if we're in a team based game.
+	if( TEAM_BASED ) then
+		timer.Simple( 1, function() 
+			self:ChooseTeam(ply)
+		end)
+	end
 
-	net.Start("killmsg")
-		net.WriteInt(typ, 16)
-		net.WriteInt(ply:Team(), 16)
-		net.WriteString(txt)
-	net.Send(player.GetAll()) --not sure if this is correct, I think this umsg is sent to everyone.
-end
-
-function GM:PlayerDeath(ply,pln, pln2)
-	--timer.Simple(1,self.BalanceTeams, self)
-	timer.Simple(1, function() self.BalanceTeams() end)
 	local killer = ply.plane.killer
 	if killer == "LOAD" then
 		ply:SendNextSpawn(CurTime() + 1)
 		return
 	end
+
 	if tonumber(ply:GetInfo("df_film")) == 1 then
 		ply:SendNextSpawn(CurTime())
 		return
 	end
+
 	if killer != "RESET" then
 		local tme = SPAWN_TIME
 		if ply.plane.killers != {} && ply.plane.killers != nil then
 			local name = "ERROR"
+			
 			if IsValid(killer) then
 				if killer:GetClass() == "player" then
 					name = killer:Nick()
@@ -419,9 +354,11 @@ function GM:PlayerDeath(ply,pln, pln2)
 				ply:TakeMoney(math.ceil(CRASH_FINE * ply.skill))
 				ply:StartNormalSpec()
 			end
+
 			ply:SetNWInt("deaths", ply:GetNWInt("deaths", 0) + 1)
 			self:CalcDamageMoney(killer,ply)
 		else
+		
 			self:KillMessage(ply,ply:Nick().." crashed.", KILL_TYPE_CRASH)
 			tme = SPAWN_TIME * 2
 			ply.tot_crash = ply.tot_crash or 0
@@ -429,31 +366,51 @@ function GM:PlayerDeath(ply,pln, pln2)
 			ply:MoneyMessage("Crashed (-"..math.ceil(CRASH_FINE * ply.skill).."C)", Color(255,100,100))
 			ply:TakeMoney(math.ceil(CRASH_FINE * ply.skill))
 			ply:StartNormalSpec()
+			
 		end
-		if ply:CheckGroup({"P"}) then
-			tme = tme * P_SPAWN_MULT
-		elseif ply:CheckGroup({"G"}) then
-			tme = tme * G_SPAWN_MULT
-		end
+		
 		tme = self:ModifySpawnTime(ply, killer, tme)
 		ply:SendNextSpawn(CurTime() + tme)
 	else
 		ply:SendNextSpawn(CurTime() + 3)
 	end
+	
 end
 
-function GM:ModifySpawnTime(ply,killer,tme)
-	return tme
+--[[
+	Func: GM:KillMessage
+	Desc: Send player messages
+	Params: player ply, string txt, number typ, string ico
+]]
+function GM:KillMessage(ply, txt, typ, ico)
+	ico = ico or "suicide"
+	net.Start("killmsg")
+		net.WriteInt(typ, 16)
+		net.WriteInt(ply:Team(), 16)
+		net.WriteString(txt)
+	net.Broadcast()
 end
 
+--[[
+	Func: GM:ModifySpawnTime
+	Desc: Allow the use of custom spawn times.
+	Params: player ply, player killer, number time
+]]
+function GM:ModifySpawnTime(ply,killer, time )
+	return time
+end
+
+--[[
+	Func: GM:CalcDamageMoney
+	Desc: Manage the players money.
+	Params: player killer, player ply
+]]
 function GM:CalcDamageMoney(killer, ply)
-	for k,v in pairs(ply.plane.killers) do
+	for k, v in pairs(ply.plane.killers) do
 		local ent = player.GetByUniqueID(k)
 		if IsValid(ent) && ent != ply then
 			local aw = v / ply.plane.MAX_DAMAGE * 10
-			aw = math.Clamp(math.floor(aw),0, 10)
-			aw = aw * ply.plane.ARMOUR
-			aw = math.ceil(aw)
+			aw = math.ceil( math.Clamp(math.floor(aw),0, 10) * ply.plane.ARMOUR )
 			if ent == killer then aw = aw + 5 end
 			if aw > 1 then
 				if ent:CheckGroup({"P"}) then
@@ -468,53 +425,56 @@ function GM:CalcDamageMoney(killer, ply)
 	end
 end
 
-function GM:PlayerShouldTakeDamage(ply)
-	return false
-end
-
-function GM:EntityTakeDamage( ent, inf, atk, amt, dmg )
-	if ent:GetModel() == "models/props_junk/wood_pallet001a.mdl" then
-		if IsValid(ent.plane) && (inf:GetClass() == "plane_gun" || inf:GetClass() == "df_flak")  then
-			ent.plane:TakeDamage(amt,inf,inf)
-			if ent:Health() <= 10 then
-				ent.plane:SetKiller(inf.plane.ply, 1)
-			end
-			return true
-		else
-			return false
-		end
-	end
-end
-
-function GM:BalanceTeams()
-
-end
-
+--[[
+	Func: GM:ScalePlaneDamage
+	Desc: Determine damage scale for unlock && other bonuses. 
+]]
 function GM:ScalePlaneDamage(plane,dmg)
 	return dmg
 end
 
-function GM:PlayerDeathThink(ply)
-	--if !ply.NextSpawn then ply.NexSpawn = CurTime()+1 end
-	--if ply.NextSpawn <= CurTime() then
-	--	if ply:KeyReleased(IN_ATTACK) then
-			ply:Spawn()
-	--	end
-	--end
+--[[
+	Func: GM:PlayerShouldTakeDamage
+	Desc: Make sure the player cannot be killed.
+	Params: player ply
+]]
+function GM:PlayerShouldTakeDamage(ply)
+	return false
 end
 
+--[[
+	Func: GM:EntityTakeDamage
+	Desc: Simulate damage on the plane.
+	Params: entity entity, CTakeDamageInfo dmginfo
+]]
+function GM:EntityTakeDamage( entity, dmginfo )
+	
+	local DamageAmount = dmginfo:GetDamage( )
+	local DamageInflictor = dmginfo:GetInflictor( )
+
+	-- Check if our winds are being shot at. :D
+	if entity:GetModel() == "models/props_junk/wood_pallet001a.mdl" then
+		if( IsValid(entity.plane) and ( DamageInflictor:GetClass() == "plane_gun" or DamageInflictor:GetClass() == "df_flak") )  then
+			entity.plane:TakeDamage( DamageAmount, DamageInflictor, DamageInflictor)
+			if entity:Health() <= 10 then entity.plane:SetKiller(DamageInflictor.plane.ply, 1) end
+			return true
+		end
+	end
+	return false
+end
+
+function GM:PlayerDeathThink(ply)
+	if( not ply.Allow or ply.Allow == false ) then return end
+	ply:Spawn()
+end
+
+--[[
+	Func: GM:PlayerDisconnected
+	Desc: Remove the players plane, if it exists.
+	NOTE: removed profile saving because mysql.lua handles this already.
+]]
 function GM:PlayerDisconnected(ply)
 	if IsValid(ply.plane) then
 		ply.plane:Remove()
-	end
-	SaveProfile(ply)
-	--if !ply:Alive() && ply.NextSpawn && ply.NextSpawn > CurTime() then
-		--discplayers[ply:SteamID()] = {NS = ply.NextSpawn}
-	--end
-end
-
-function GM:ShutDown()
-	for k,v in pairs(player.GetAll()) do
-		SaveProfile(v)
 	end
 end
