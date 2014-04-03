@@ -23,14 +23,13 @@ local SQLITE_TABLE_CREATE_QUERY = [[
 --[[ 
 	Don't try and create MySql objects if we're not using them!
 ]]
-
 require( "mysqloo" )
 
 local db
 
 -- Check if mysqloo was loaded, not sure if there is a better way to do this.
 if( mysqloo ) then
-	db = mysqloo.connect( "127.0.0.1", "root", "test123" , "faintlink", 3306)
+	db = db or mysqloo.connect( "127.0.0.1", "root", "test123" , "faintlink", 3306)
 
 	function db:onConnectionFailed( errorMessage )
 		Msg("There was an error connecting to the database!\n")
@@ -38,14 +37,14 @@ if( mysqloo ) then
 	end
 
 	function db:onConnected( )
-		Msg("Database Connected!\n")
+		print( "Database Connected!" )
 	end
 	db:connect()
 else
 	-- Fallback to SQLite
 	DATABASE_IS_MYSQL = false
 end
-
+ 
 --[[
 	Func: dbquery
 	Desc: Allows queries with callbacks.
@@ -229,6 +228,8 @@ function LoadProfiles(ply)
 			ply.DataWasLoaded = true
 			ply:SendStats(ply)
 			
+			-- Tell the game we're reading to play. Stop the spamming of LoadProfiles()
+			hook.Call( "MYSQL.PlayerLoaded", nil, ply )
 			ply:ChatPrint( "DogFight game data loaded." .. TranslateFlags(ply) )
 		end)
 	end)
@@ -296,11 +297,13 @@ end
 hook.Add("PlayerDisconnected", "PlayerOffline", SetOffline)
 
 -- Save everyone on shutdown
-hook.Add( "ShutDown", "ShuttingDown", function()
+local function SaveAllProfiles()
 	for _, ply in pairs( player.GetAll() ) do
 		SaveProfile(ply)
 	end
-end)
+end
+hook.Add( "ShutDown", "ShuttingDown", SaveAllProfiles )
+timer.Create( "MYSQLSaveAllProfiles", PLY_SAVE_DELAY, 0, function() SaveAllProfiles() end)
 
 --[[
 	Func: SetAllOffline
@@ -311,7 +314,4 @@ local function SetAllOffline()
 	dbquery("UPDATE clients SET server = 0 WHERE server = 27025 ")
 end
 hook.Add( "ShutDown", "ShuttingDown", SetAllOffline )
-hook.Add( "Initialize", "StartingUp", function() 
-	-- Stop the query from trying to run when the server hasnt initialized the MySQl object.
-	timer.Simple( 1, SetAllOffline ) 
-end)
+hook.Add( "Initialize", "StartingUp", function() timer.Simple( 1, SetAllOffline ) end)
