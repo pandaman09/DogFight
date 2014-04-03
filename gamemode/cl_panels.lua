@@ -492,19 +492,19 @@ function PANEL:Init()
 	self.banlabel:SetPos(10,517.5)
 	self.banlabel:SizeToContents()
 	self.banlabel:SetTextColor(Color(0,0,0,255))
-	self.reason = vgui.Create( "DMultiChoice", self )
+	self.reason = vgui.Create( "DComboBox", self )--changed
 	self.reason:SetPos(55,480)
 	self.reason:SetSize(645,20)
 	self.reason:SizeToContents()
- 	self.reason:SetEditable( true )
+ 	--self.reason:SetEditable( true )
 	for k,v in pairs(kick_reasons) do
 		self.reason:AddChoice(v)
 	end
-	self.bantime = vgui.Create( "DMultiChoice", self )
+	self.bantime = vgui.Create( "DComboBox", self )--changed
 	self.bantime:SetPos(110,515)
 	self.bantime:SetSize(590,20)
 	self.bantime:SizeToContents()
- 	self.bantime:SetEditable( true )
+ 	--self.bantime:SetEditable( true )
 	for k,v in pairs(ban_times) do
 		self.bantime:AddChoice(v)
 	end
@@ -708,9 +708,9 @@ function PANEL:Init()
 			self.BUT:SetText("%"..progress.." - "..self.BUT.txt.." - "..progress.."%")
 		end
     end
-	self.all = vgui.Create( "DMultiChoice", self )
+	self.all = vgui.Create( "DComboBox", self )--changed
 	self.all:SizeToContents()
- 	self.all:SetEditable( false )
+ 	--self.all:SetEditable( false )
 	for k,v in pairs(SONGS) do
 		self.all:AddChoice(k)
 	end
