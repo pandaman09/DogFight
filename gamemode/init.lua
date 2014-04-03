@@ -9,7 +9,6 @@ include( "player_extension.lua" )
 include( "shared.lua" )
 include("mysql.lua")
 include( "commands.lua" )
-include( "sv_spawnpoints.lua" )
 
 --[[
 	List of net messages used in the gamemode.
@@ -50,6 +49,41 @@ local ResourceLocations = {
 	"models/Bennyg/Radar/",
 	"models/Bennyg/plane/",
 	"sound/df/"
+}
+
+--[[
+	Create spawnpoints
+]]
+gamemode.SpawnPoints = {}		
+gamemode.SpawnPoints.maps = {}
+
+-- Incase we couldn't get custom map spawns.
+gamemode.SpawnPoints.Fallbacks = {
+	Vector(308.807587, -823.679688, 4000),
+	Vector(-604.365051, -121.023193, 4000),
+	Vector(-99.311798, -563.050171, 4000)
+}
+
+--	dfa_rsi
+gamemode.SpawnPoints.maps[ "dfa_rsi" ] = {
+	FreeForAll = {
+		Vector(308.807587, -823.679688, 4000),
+		Vector(-604.365051, -121.023193, 4000),
+		Vector(-99.311798, -563.050171, 4000)	
+	},
+
+	TeamBased = {
+		[1] = {
+			Vector(7791.807587, -6489.679688, 3000),
+			Vector(7591.807587, -6489.679688, 3000),
+			Vector(7891.807587, -6489.679688, 3000),
+		},
+		[2] = {
+			Vector(800.807587, -823.679688, 4000),
+			Vector(-800.365051, -121.023193, 4000),
+			Vector(-800.311798, -563.050171, 4000)
+		}
+	}
 }
 
 --[[
