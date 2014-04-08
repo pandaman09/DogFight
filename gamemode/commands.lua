@@ -190,3 +190,12 @@ function SetTrail(ply, cmd, args)
 end
 
 concommand.Add("SetTrail" , SetTrail )
+
+function UpdateSetting(ply, cmd, args)
+
+	if !IsValid(ply) then return end
+	Msg("Updating player["..ply:Nick().."]'s settings\n")
+	ply:GetOptions()
+end
+
+concommand.Add("df_update" , UpdateSetting )

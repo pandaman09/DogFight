@@ -228,9 +228,7 @@ function GM:PlayerInitialSpawn(ply)
 	ply.learnt = false
 	ply.targ_damage = 0
 
-	timer.Simple( 2, function() 
-		ply:GetOptions() 
-	end)
+	ply:GetOptions()
 
 	-- What is the point? A simple anti-ESP? i'll leave it here anyway...
 	ply:SendLua([[

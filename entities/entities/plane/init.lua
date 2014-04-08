@@ -33,6 +33,7 @@ ENT.LIFT_POWER = 9
 ENT.DAMAGE_DIVIDE = 2
 
 ENT.WING_HEALTH = 150
+ENT.TAIL_HEALTH = 150
 ENT.ARMOUR = 1
 ENT.S_MOD = 1
 
@@ -93,16 +94,24 @@ function ENT:Initialize()
 	self.tail1:SetPos(self:GetPos() + (self:GetForward() * -55) + Vector(0,0,35))
 	self.tail1:SetAngles(self:GetAngles() + Angle(0,180,0))
 	self.tail1:SetParent(self)
+	--self.tail1.plane = self
+	--self.tail1:Spawn()
 	
 	--self.tail1:GetPhysicsObject():EnableGravity(false) -- all thsi crap is to keep the damn thing balanced
+	--self.tail1:GetPhysicsObject():EnableDrag(false) -- all thsi crap is to keep the damn thing balanced
+	
 	self.wing1:GetPhysicsObject():SetMass(7)
 	self.wing2:GetPhysicsObject():SetMass(7)
-	--self.tail1:GetPhysicsObject():SetMass(1)
+	--self.tail1:GetPhysicsObject():SetMass(7)
 	self.wing1:SetHealth(self.WING_HEALTH)
 	self.wing2:SetHealth(self.WING_HEALTH)
+	--self.tail1:SetHealth(self.TAIL_HEALTH)
+
+	--self.tail1:GetPhysicsObject():OutputDebugInfo()
 	
 	self.wing1_weld = constraint.Weld( self, self.wing1, 0, 0, 0, true ) 
 	self.wing2_weld = constraint.Weld( self, self.wing2, 0, 0, 0, true ) 
+									-- ent1  ent2 bone1 bone2 forcelimit nocolide_until_break
 	--self.tail1_weld = constraint.Weld( self, self.tail1, 0, 0, 0, true ) 
 	
 	self.Engine_Sound = CreateSound(self, "vehicles/Airboat/fan_blade_fullthrottle_loop1.wav")
@@ -350,8 +359,8 @@ end
 function ENT:PhysicsSimulate( phys, deltatime )
 	if !IsValid(self.ply) then return end
 	--so shit works
-	self.ply.UPKEY = IN_BACK
-	self.ply.DOWNKEY = IN_FORWARD
+	--self.ply.UPKEY = IN_BACK
+	--self.ply.DOWNKEY = IN_FORWARD
 
 	local p = self:GetPhysicsObject()
 	local ply = self.ply
