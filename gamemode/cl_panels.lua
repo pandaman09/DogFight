@@ -118,14 +118,14 @@ HELP[7] = {"Donators",
 local PANEL = {}
 
 function PANEL:Init()
-	self.list = vgui.Create( "DPanelList", self )
+	self.list = vgui.Create( "DCategoryList", self )
 	self.list:SetPadding(4)
-	self.list:EnableVerticalScrollbar( true )
+	--self.list:EnableVerticalScrollbar( true )
 	self:SetSize(self:GetParent():GetSize())
 	for k,v in pairs(HELP) do
 		local cat = vgui.Create( "DCollapsibleCategory", self )
 		cat:SetLabel(v[1])
-		local list = vgui.Create("DPanelList",cat)
+		local list = vgui.Create("DCategoryList",cat)
 		list:SetPadding(10)
 		for k2,v2 in pairs(v) do
 			if k2 != 1 then
@@ -254,8 +254,8 @@ local PANEL = {}
 
 function PANEL:Init()
 	self.ctrls = {}
-	self.ctrls_list = vgui.Create("DPanelList", self)
-	self.ctrls_list:EnableVerticalScrollbar( true )
+	self.ctrls_list = vgui.Create("DCategoryList", self)
+	--self.ctrls_list:EnableVerticalScrollbar( true )
 	self.unlocks = {}
 	self.ctrls_list:SetPadding(5)
 	for k,v in pairs(UNLOCK_GROUPS) do
@@ -263,7 +263,7 @@ function PANEL:Init()
 		self.ctrls[k]:SetLabel( v )
 		self.ctrls[k]:SetSize( 300, 300 )
 		self.ctrls[k]:SetPadding( 5 )
-		self.ctrls[k].LIST = vgui.Create("DPanelList", self)
+		self.ctrls[k].LIST = vgui.Create("DCategoryList", self)
 		self.ctrls[k]:SetContents(self.ctrls[k].LIST)
 		self.ctrls_list:AddItem(self.ctrls[k])
 	end
@@ -672,9 +672,9 @@ function PANEL:Init()
 	self:SetSize(400,470)
 	self:SetTitle("Radio")
 	self:MakePopup()
-	self.list = vgui.Create("DPanelList", self)
+	self.list = vgui.Create("DCategoryList", self)
 	self.list:SetPadding(2)
-	self.list:EnableVerticalScrollbar( true )
+	--self.list:EnableVerticalScrollbar( true )
 	self.buts = {}
 	self.HTML = vgui.Create("HTML",self)
 	local lab = vgui.Create("DLabel", self)

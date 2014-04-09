@@ -112,13 +112,13 @@ function GM:InitPostEntity()
 
 	-- Create the spawns if it's team based.
 	local map = game.GetMap()
-
+	local mapHasSpawns = ( IsValid(Spawns.maps[map]) and Count(Spawns.maps[map])>0 )
 	if !IsValid(Spawns.maps[map]) or Count(Spawns.maps[map])==0 then
 		Msg("No Spawn points for this map! Please create some.\n")
-		return
+	--	return
 	end
 
-	if( map and TEAM_BASED ) then
+	if( mapHasSpawns and TEAM_BASED ) then
 		local TeamSpawns = Spawns.maps[map].TeamBased
 		for _, Location in pairs( TeamSpawns[1] ) do
 			print( "SPAWNING POINT df_spawn_idc" )
@@ -134,7 +134,7 @@ function GM:InitPostEntity()
 		end
 		return
 		
-	elseif( map and not TEAM_BASED) then	-- Otherwise create the free for all points.
+	elseif( mapHasSpawns and not TEAM_BASED) then	-- Otherwise create the free for all points.
 			for _, Location in pairs( Spawns.maps[map].FreeForAll ) do
 				local SpawnPoint = ents.Create( "info_player_start" )
 				SpawnPoint:SetPos( Location )
@@ -144,7 +144,7 @@ function GM:InitPostEntity()
 	end
 
 	-- The map data doesnt exist. Creating fallbacks.
-	for _, Location in ( Spawns.Fallbacks ) do
+	for _, Location in pairs( Spawns.Fallbacks ) do
 		local SpawnPoint = ents.Create( "info_player_start" )
 		SpawnPoint:SetPos( Location )
 		SpawnPoint:Spawn()
@@ -191,6 +191,9 @@ function GM:ChooseTeam(ply)
 	if( TEAM_BASED ) then
 		local Team = team.BestAutoJoinTeam( )		
 		-- If the random team selection fails, we'll have to guess. 
+
+		if( math.abs(team.NumPlayers( 1 ) - team.NumPlayers( 2 ) ) <= 1 ) then return end
+
 		if( not Team or Team == TEAM_UNASSIGNED ) then
 			ply:SetTeam( math.random( 1, 2 ) )
 			return
@@ -208,7 +211,7 @@ end
 	Params: player ply
 ]]
 function GM:CanPlayerSuicide ( ply )
-	if( IsValid(ply.plane) and ply.plane:GetVelocity():Length() <= 100 )then return true end
+	if( IsValid(ply.plane) and ply.plane:GetVelocity():Length() <= 100 ) then return true end
 	if( tonumber(ply:GetInfo("df_film")) == 1 or IsValid(ply.plane) ) then return true end
 	return false
 end
@@ -225,9 +228,7 @@ function GM:PlayerInitialSpawn(ply)
 	ply.learnt = false
 	ply.targ_damage = 0
 
-	timer.Simple( 2, function() 
-		ply:GetOptions() 
-	end)
+	ply:GetOptions()
 
 	-- What is the point? A simple anti-ESP? i'll leave it here anyway...
 	ply:SendLua([[
@@ -246,7 +247,7 @@ end
 	Desc: Select a spawn point depending on gametype
 	Args: player ply
 ]]
-function GM:PlayerSelectSpawn(ply)
+function GM:SelectSpawn(ply)
 	if( not IsValid( ply ) ) then return Vector( 0, 0, 0 ) end
 	
 	local SearchEntity = "info_player_start"
@@ -470,9 +471,23 @@ function GM:EntityTakeDamage( entity, dmginfo )
 	return false
 end
 
+
+--[[
+	Func: GM:PlayerDeathThink
+	Desc: Respawn player if they press a button or if they exit df_film mode
+	NOTE: removed profile saving because mysql.lua handles this already.
+]]
 function GM:PlayerDeathThink(ply)
+	if !IsValid(ply) then return end
 	if( not ply.Allow or ply.Allow == false ) then return end
-	ply:Spawn()
+	if tonumber(ply:GetInfo("df_film")) == 0 and ply:GetObserverMode( )!=5 then
+		ply:Spawn()
+	end
+	if ply.respawnNow and ply.respawnNow == true then
+		ply.respawnNow = false
+		ply:Spawn()
+	end
+
 end
 
 --[[
@@ -483,5 +498,22 @@ end
 function GM:PlayerDisconnected(ply)
 	if IsValid(ply.plane) then
 		ply.plane:Remove()
+	end
+end
+
+function SpectateOff(ply)
+	if !IsValid(ply) then return end
+	ply:KillSilent( )
+	ply:SendNextSpawn(CurTime()+1)
+	ply:SetObserverMode(OBS_MODE_CHASE)
+	ply:SetMoveType(MOVETYPE_OBSERVER)
+end
+
+function GM:KeyPress(ply, key)
+	if IsValid(ply) and !ply:Alive() and ply:GetObserverMode( )!=6 then
+		ply.respawnNow = true
+	end
+	if ply:GetObserverMode( )==6 and tonumber(ply:GetInfo("df_film")) == 0 then
+		SpectateOff(ply)
 	end
 end
