@@ -471,9 +471,23 @@ function GM:EntityTakeDamage( entity, dmginfo )
 	return false
 end
 
+
+--[[
+	Func: GM:PlayerDeathThink
+	Desc: Respawn player if they press a button or if they exit df_film mode
+	NOTE: removed profile saving because mysql.lua handles this already.
+]]
 function GM:PlayerDeathThink(ply)
+	if !IsValid(ply) then return end
 	if( not ply.Allow or ply.Allow == false ) then return end
-	ply:Spawn()
+	if tonumber(ply:GetInfo("df_film")) == 0 and ply:GetObserverMode( )!=5 then
+		ply:Spawn()
+	end
+	if ply.respawnNow and ply.respawnNow == true then
+		ply.respawnNow = false
+		ply:Spawn()
+	end
+
 end
 
 --[[
@@ -484,5 +498,22 @@ end
 function GM:PlayerDisconnected(ply)
 	if IsValid(ply.plane) then
 		ply.plane:Remove()
+	end
+end
+
+function SpectateOff(ply)
+	if !IsValid(ply) then return end
+	ply:KillSilent( )
+	ply:SendNextSpawn(CurTime()+1)
+	ply:SetObserverMode(OBS_MODE_CHASE)
+	ply:SetMoveType(MOVETYPE_OBSERVER)
+end
+
+function GM:KeyPress(ply, key)
+	if IsValid(ply) and !ply:Alive() and ply:GetObserverMode( )!=6 then
+		ply.respawnNow = true
+	end
+	if ply:GetObserverMode( )==6 and tonumber(ply:GetInfo("df_film")) == 0 then
+		SpectateOff(ply)
 	end
 end
