@@ -7,7 +7,7 @@ AddCSLuaFile( "unlocks.lua")
 
 include( "player_extension.lua" )
 include( "shared.lua" )
-include("mysql.lua")
+include( "mysql.lua" )
 include( "commands.lua" )
 
 --[[
@@ -36,6 +36,11 @@ util.AddNetworkString( "team" ) -- cl_panels.lua line ~839
 util.AddNetworkString( "send_ul" ) -- player_extension.lua line ~59
 util.AddNetworkString( "send_ul" ) -- unlocks.lua
 
+util.AddNetworkString( "spawnpointeditor" ) -- used for checking spawnpoint editor usage
+util.AddNetworkString( "sendspawns" ) -- used for sending spawnpoint info to the client
+util.AddNetworkString( "create_spawn" ) -- used for creating spawnpoints
+
+
 --[[
 	Resource Table
 ]]
@@ -52,6 +57,16 @@ local ResourceLocations = {
 }
 
 --[[
+	Player mode Enums
+	MODE_FLY is for normal play
+	MODE_FILM is for df_film
+	MODE_ESPAWN is for spawn editor
+]]
+MODE_FLY = 0
+MODE_FILM = 1
+MODE_ESPAWN = 2
+
+--[[
 	Create spawnpoints
 ]]
 gamemode.SpawnPoints = {}		
@@ -59,29 +74,65 @@ gamemode.SpawnPoints.maps = {}
 
 -- Incase we couldn't get custom map spawns.
 gamemode.SpawnPoints.Fallbacks = {
-	Vector(308.807587, -823.679688, 4000),
-	Vector(-604.365051, -121.023193, 4000),
-	Vector(-99.311798, -563.050171, 4000)
+	[1]={
+		["vec"]=Vector(308, -823, 4000),
+		["ang"]=Angle(0,0,0)
+	},
+	[2]={
+		["vec"]=Vector(-604, -121, 4000),
+		["ang"]=Angle(0,0,0)
+	},
+	[3]={
+		["vec"]=Vector(-99, -563, 4000),
+		["ang"]=Angle(0,0,0)
+	}
 }
 
 --	dfa_rsi
 gamemode.SpawnPoints.maps[ "dfa_rsi" ] = {
 	FreeForAll = {
-		Vector(308.807587, -823.679688, 4000),
-		Vector(-604.365051, -121.023193, 4000),
-		Vector(-99.311798, -563.050171, 4000)	
+		[1]={
+			["vec"]=Vector(308, -823, 4000),
+			["ang"]=Angle(0,0,0)
+		},
+		[2]={
+			["vec"]=Vector(-604, -121, 4000),
+			["ang"]=Angle(0,0,0)
+		},
+		[3]={
+			["vec"]=Vector(-99, -563, 4000),
+			["ang"]=Angle(0,0,0)
+		}
 	},
 
 	TeamBased = {
-		[1] = {
-			Vector(7791.807587, -6489.679688, 3000),
-			Vector(7591.807587, -6489.679688, 3000),
-			Vector(7891.807587, -6489.679688, 3000),
+		["idc"] = {
+			[1]={
+				["vec"]=Vector(7791, -6489, 3000),
+				["ang"]=Angle(0,0,0)
+			},
+			[2]={
+				["vec"]=Vector(7591, -6489, 3000),
+				["ang"]=Angle(0,0,0)
+			},
+			[3]={
+				["vec"]=Vector(7891, -6489, 3000),
+				["ang"]=Angle(0,0,0)
+			}
 		},
-		[2] = {
-			Vector(800.807587, -823.679688, 4000),
-			Vector(-800.365051, -121.023193, 4000),
-			Vector(-800.311798, -563.050171, 4000)
+		["gbu"] = {
+			[1]={
+				["vec"]=Vector(-800, -823, 4000),
+				["ang"]=Angle(0,0,0)
+			},
+			[2]={
+				["vec"]=Vector(-800, -121, 4000),
+				["ang"]=Angle(0,0,0)
+			},
+			[3]={
+				["vec"]=Vector(-800, -563, 4000),
+				["ang"]=Angle(0,0,0)
+			}
 		}
 	}
 }
@@ -114,41 +165,56 @@ function GM:InitPostEntity()
 	local map = game.GetMap()
 	local mapHasSpawns = ( IsValid(Spawns.maps[map]) and Count(Spawns.maps[map])>0 )
 	if !IsValid(Spawns.maps[map]) or Count(Spawns.maps[map])==0 then
-		Msg("No Spawn points for this map! Please create some.\n")
+		Msg("No Spawn points for this map! Go to Settings menu and enable Spawnpoint Editing\n")
 	--	return
 	end
 
 	if( mapHasSpawns and TEAM_BASED ) then
 		local TeamSpawns = Spawns.maps[map].TeamBased
-		for _, Location in pairs( TeamSpawns[1] ) do
+		for _, info in pairs( TeamSpawns["idc"] ) do
+			local Location = info.vec
+			local Angle = info.ang
 			print( "SPAWNING POINT df_spawn_idc" )
 			local SpawnPoint = ents.Create( "df_spawn_idc" )
 			SpawnPoint:SetPos( Location )
+			SpawnPoint:SetAngles( Angle )
 			SpawnPoint:Spawn()				
 		end
-		for _, Location in pairs( TeamSpawns[2] ) do
+		for _, info in pairs( TeamSpawns["gbu"] ) do
+			local Location = info.vec
+			local Angle = info.ang
 			print( "SPAWNING POINT df_spawn_gbu" )
 			local SpawnPoint = ents.Create( "df_spawn_gbu" )
 			SpawnPoint:SetPos( Location )
-			SpawnPoint:Spawn()
+			SpawnPoint:SetAngles( Angle )
+			SpawnPoint:Spawn()				
 		end
 		return
 		
 	elseif( mapHasSpawns and not TEAM_BASED) then	-- Otherwise create the free for all points.
-			for _, Location in pairs( Spawns.maps[map].FreeForAll ) do
-				local SpawnPoint = ents.Create( "info_player_start" )
-				SpawnPoint:SetPos( Location )
-				SpawnPoint:Spawn()			
-			end
+		local FreeForAll = Spawns.maps[map].FreeForAll
+		for _, info in pairs( FreeForAll ) do
+			local Location = info.vec
+			local Angle = info.ang
+			print( "SPAWNING POINT info_player_start" )
+			local SpawnPoint = ents.Create( "info_player_start" )
+			SpawnPoint:SetPos( Location )
+			SpawnPoint:SetAngles( Angle )
+			SpawnPoint:Spawn()				
+		end	
 		return
 	end
 
 	-- The map data doesnt exist. Creating fallbacks.
-	for _, Location in pairs( Spawns.Fallbacks ) do
+	for _, info in pairs( Spawns.Fallbacks ) do
+		local Location = info.vec
+		local Angle = info.ang
+		print( "SPAWNING FALLBACK POINT info_player_start at [",Location,"]" )
 		local SpawnPoint = ents.Create( "info_player_start" )
 		SpawnPoint:SetPos( Location )
+		SpawnPoint:SetAngles( Angle )
 		SpawnPoint:Spawn()
-	end
+	end	
 end
 
 --[[
@@ -213,6 +279,7 @@ end
 function GM:CanPlayerSuicide ( ply )
 	if( IsValid(ply.plane) and ply.plane:GetVelocity():Length() <= 100 ) then return true end
 	if( tonumber(ply:GetInfo("df_film")) == 1 or IsValid(ply.plane) ) then return true end
+	if( tonumber(ply:GetInfo("df_editspawns")) == 1 or IsValid(ply.plane) ) then return true end
 	return false
 end
 
@@ -264,7 +331,15 @@ function GM:SelectSpawn(ply)
 		
 		local SpawnPoints = ents.FindByClass( SearchEntity )
 		local SpawnCount = table.Count(SpawnPoints)
-		if( not (SpawnCount>0) ) then return Vector( 0,0,1500 ) end
+		if !(SpawnCount>0) then
+			local FallbackPoints = ents.FindByClass( "info_player_start" )
+			local FallbackCount = table.Count(FallbackPoints)
+			if (FallbackCount>0) then
+				return FallbackPoints[math.random( 1, FallbackCount ) ]:GetPos() or Vector( 0, 0, 0 )
+			else
+				return Vector( 0, 0, 0 )
+			end
+		end
 		return SpawnPoints[math.random( 1, SpawnCount ) ]:GetPos() or Vector( 0, 0, 0 )
 	end
 	return ents.FindByClass( SearchEntity )[math.random( 1, #ents.FindByClass( SearchEntity ) )]:GetPos()
@@ -295,7 +370,26 @@ function GM:PlayerSpawn(ply)
 
 	if tonumber(ply:GetInfo("df_film")) == 1 then
 		ply:Spectate(OBS_MODE_ROAMING)
+		ply.Mode = MODE_FILM
 		return
+	end
+
+	if tonumber(ply:GetInfo("df_editspawns")) == 1 then
+		if ply:IsAdmin() or ply:IsSuperAdmin() then
+			ply:Spectate(OBS_MODE_ROAMING)
+			net.Start("spawnpointeditor")
+				net.WriteBit(true)
+				net.WriteBit(false)
+			net.Send(ply)
+			ply.Mode = MODE_ESPAWN
+			ply:ChatPrint("Spawn Editor Enabled, Clearing props and spawning new ones!")
+			return
+		end	
+		net.Start("spawnpointeditor")
+			net.WriteBit(false)
+			net.WriteBit(false)
+		net.Send(ply)
+		ply:ChatPrint("You are not an admin and cannot use the Spawnpoint Editor")
 	end
 
 	local spawnpoint = self:SelectSpawn(ply)
@@ -314,6 +408,8 @@ function GM:PlayerSpawn(ply)
 	ply:SetMoveType(MOVETYPE_OBSERVER)
 	ply.plane:AddPilot(ply)
 	ply:SetNWEntity("plane", ply.plane)	
+
+	ply.Mode = MODE_FLY
 end
 hook.Add( "MYSQL.PlayerLoaded", "InitializePlayer", function(ply) ply:Spawn() end )
 
@@ -507,13 +603,30 @@ function SpectateOff(ply)
 	ply:SendNextSpawn(CurTime()+1)
 	ply:SetObserverMode(OBS_MODE_CHASE)
 	ply:SetMoveType(MOVETYPE_OBSERVER)
+	ply:Spawn()
+end
+
+function SpawnEditorOff(ply)
+	if !IsValid(ply) then return end
+	ply:KillSilent( )
+	ply:SendNextSpawn(CurTime()+1)
+	ply:SetObserverMode(OBS_MODE_CHASE)
+	ply:SetMoveType(MOVETYPE_OBSERVER)
+	net.Start("spawnpointeditor")
+		net.WriteBit(false)
+		net.WriteBit(true)
+	net.Send(ply)
+	ply:Spawn()
 end
 
 function GM:KeyPress(ply, key)
-	if IsValid(ply) and !ply:Alive() and ply:GetObserverMode( )!=6 then
+	if IsValid(ply) and !ply:Alive() and ply.Mode==MODE_FLY then
 		ply.respawnNow = true
 	end
-	if ply:GetObserverMode( )==6 and tonumber(ply:GetInfo("df_film")) == 0 then
+	if ply.Mode==MODE_FILM and tonumber(ply:GetInfo("df_film")) == 0 then
 		SpectateOff(ply)
+	end
+	if ply.Mode==MODE_ESPAWN and tonumber(ply:GetInfo("df_editspawns")) == 0 then
+		SpawnEditorOff(ply)
 	end
 end

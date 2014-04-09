@@ -211,11 +211,11 @@ function GM:CalcView(ply, origin, angles, fov)
 			if IsValid(ENT) then
 				SPEC.STAGE = nil
 			else
-				if ENT:GetClass() == "player" then
+				if IsValid(ENT) and ENT:GetClass() == "player" then
 					ENT = ENT:GetNWEntity("plane")
 				end
 			end
-			if IsValid(ENT) then
+			if !IsValid(ENT) then
 				local all = ents.FindByClass("plane")
 				if #all == 0 then return end
 				SPEC.ENT = all[math.random(1,#all)]
@@ -682,10 +682,11 @@ function GM:HUDPaint()
 	self:UpdateValues()
 	local W = ScrW()
 	local H = ScrH()
-	if SPEC.STAGE && SPEC.STAGE == 3 then
+	local editspawns = (GetConVarNumber( "df_editspawns" )==1)
+	if SPEC.STAGE && SPEC.STAGE == 3 and !editspawns then
 		self:DrawFreezeCamHUD(W,H)
 	end
-	if (SPEC.STAGE && SPEC.STAGE >= 4) || !SPEC.STAGE then
+	if (SPEC.STAGE && SPEC.STAGE >= 4) || !SPEC.STAGE and !editspawns then
 			--self:DoNotifyBox()
 			if IsValid(LocalPlayer().plane) && !SPEC.STAGE then
 				local pos = HUD.PLANE_POS + LocalPlayer().plane:GetForward() * 1000 + LocalPlayer().plane:GetUp() * 20
@@ -705,6 +706,9 @@ function GM:HUDPaint()
 			self:DrawESP(W,H)
 			self:DrawPlaneHUD(W,H)
 		end
+	end
+	if editspawns then
+		self:DrawSpawnEditor(W,H)
 	end
 end
 
@@ -799,3 +803,165 @@ end
 function GM:DrawGameHUD(W,H)
 
 end
+
+idc_spawns = idc_spawns or {}
+gbu_spawns = gbu_spawns or {}
+ffa_spawns = ffa_spawns or {}
+idc_spawns_props = idc_spawns_props or {}
+gbu_spawns_props = gbu_spawns_props or {}
+ffa_spawns_props = ffa_spawns_props or {}
+
+
+function GM:DrawSpawnEditor(W,H)
+	if table.Count(idc_spawns_props)>0 then
+		for k,v in pairs(idc_spawns_props) do
+			local pos = v:GetPos()
+			local dist = pos:Distance(LocalPlayer():GetPos())
+			local size = math.Clamp((20000 - dist) / 300,0,100)
+			local scr = pos:ToScreen()
+			draw.SimpleTextOutlined( "IDC Spawn", "TID", scr.x, scr.y + (size / 2) - 10 , Color( 255, 0, 0, 255 ), 1, 1, 2, Color(0,0,0,255) )
+			draw.SimpleTextOutlined( "Pos: ["..tostring(v:GetPos()).."]", "TID", scr.x, scr.y + (size / 2) + 10, Color( 255, 0, 0, 255 ), 1, 1, 2, Color(0,0,0,255) )
+			draw.SimpleTextOutlined( "Ang: ["..tostring(v:GetAngles()).."]", "TID", scr.x, scr.y + (size / 2) + 30, Color( 255, 0, 0, 255 ), 1, 1, 2, Color(0,0,0,255) )
+		end
+	end
+	if table.Count(gbu_spawns_props)>0 then
+		for k,v in pairs(gbu_spawns_props) do
+			local pos = v:GetPos()
+			local dist = pos:Distance(LocalPlayer():GetPos())
+			local size = math.Clamp((20000 - dist) / 300,0,100)
+			local scr = pos:ToScreen()
+
+			draw.SimpleTextOutlined( "GBU Spawn", "TID", scr.x, scr.y + (size / 2) - 10 , Color( 255, 0, 0, 255 ), 1, 1, 2, Color(0,0,0,255) )
+			draw.SimpleTextOutlined( "Pos: ["..tostring(v:GetPos()).."]", "TID", scr.x, scr.y + (size / 2) + 10, Color( 255, 0, 0, 255 ), 1, 1, 2, Color(0,0,0,255) )
+			draw.SimpleTextOutlined( "Ang: ["..tostring(v:GetAngles()).."]", "TID", scr.x, scr.y + (size / 2) + 30, Color( 255, 0, 0, 255 ), 1, 1, 2, Color(0,0,0,255) )
+		end
+	end
+	if table.Count(ffa_spawns_props)>0 then
+		for k,v in pairs(ffa_spawns_props) do
+			local pos = v:GetPos()
+			local dist = pos:Distance(LocalPlayer():GetPos())
+			local size = math.Clamp((20000 - dist) / 300,0,100)
+			local scr = pos:ToScreen()
+			if dist < 2000 then
+				draw.SimpleTextOutlined( "FFA Spawn", "TID", scr.x, scr.y + (size / 2) - 10 , Color( 255, 0, 0, 255 ), 1, 1, 2, Color(0,0,0,255) )
+				draw.SimpleTextOutlined( "Pos: ["..tostring(v:GetPos()).."]", "TID", scr.x, scr.y + (size / 2) + 10, Color( 255, 0, 0, 255 ), 1, 1, 2, Color(0,0,0,255) )
+				draw.SimpleTextOutlined( "Ang: ["..tostring(v:GetAngles()).."]", "TID", scr.x, scr.y + (size / 2) + 30, Color( 255, 0, 0, 255 ), 1, 1, 2, Color(0,0,0,255) )
+				draw.SimpleTextOutlined( "Dist: ["..tostring(dist).."]", "TID", scr.x, scr.y + (size / 2) + 50, Color( 255, 0, 0, 255 ), 1, 1, 2, Color(0,0,0,255) )
+			end
+		end
+	end
+end
+
+function CheckSpawnEditor(enable,clear)
+	if !IsValid(LocalPlayer()) or LocalPlayer()==nil then return end
+	if clear then
+		local removed = 0
+		if table.Count(idc_spawns_props)>0 then
+			for k,v in pairs(idc_spawns_props) do
+				v:Remove()
+				removed = removed+1
+			end
+		end
+		if table.Count(gbu_spawns_props)>0 then
+			for k,v in pairs(gbu_spawns_props) do
+				v:Remove()
+				removed = removed+1
+			end
+		end
+		if table.Count(ffa_spawns_props)>0 then
+			for k,v in pairs(ffa_spawns_props) do
+				v:Remove()
+				removed = removed+1
+			end
+		end
+		LocalPlayer():ChatPrint("Cleared "..removed.." props!")
+	end
+	if !LocalPlayer():IsAdmin() or !LocalPlayer():IsSuperAdmin() then
+		RunConsoleCommand("df_editspawns", "0")
+		LocalPlayer():ChatPrint("Did not pass admin check")
+		return
+	end
+	if enable == true then
+		LocalPlayer():ConCommand("getspawns")
+	end
+end
+
+net.Receive("spawnpointeditor", function() 
+	local enable = tobool(net.ReadBit())
+	local clear = tobool(net.ReadBit())
+	CheckSpawnEditor(enable,clear)
+end)
+
+function SpawnpointEditorToggle(tbl)
+	if !IsValid(LocalPlayer()) or LocalPlayer()==nil then return end
+
+	LocalPlayer():ChatPrint("Spawning props for editor")
+
+	if table.Count(tbl) > 0 then
+		for k,v in pairs(tbl) do
+			if k=="idc" then
+				if table.Count(v) > 0 then
+					table.insert(idc_spawns,v)
+				end
+			elseif k=="gbu" then
+				if table.Count(v) > 0 then
+					table.insert(gbu_spawns,v)
+				end
+			elseif k=="ffa" then
+				if table.Count(v) > 0 then
+					table.insert(ffa_spawns,v)
+				end
+			end
+		end
+	end
+
+	if table.Count(idc_spawns)>0 then
+		for k,v in pairs(idc_spawns) do
+			for key, data in pairs(v) do
+				local Location = data.vec
+				local Angle = data.ang
+				local spawn = ents.CreateClientProp()
+				table.insert(idc_spawns_props,spawn)
+				spawn:SetPos( Location )
+				spawn:SetAngles( Angle )
+				spawn:SetModel("models/Bennyg/plane/re_airboat2.mdl")
+				spawn:Spawn()
+			end
+		end
+	end
+	
+	if table.Count(gbu_spawns)>0 then
+		for k,v in pairs(gbu_spawns) do
+			for key, data in pairs(v) do
+				local Location = data.vec
+				local Angle = data.ang
+				local spawn = ents.CreateClientProp()
+				table.insert(gbu_spawns_props,spawn)
+				spawn:SetPos( Location )
+				spawn:SetAngles( Angle )
+				spawn:SetModel("models/Bennyg/plane/re_airboat2.mdl")
+				spawn:Spawn()
+			end
+		end
+	end
+	
+	if table.Count(ffa_spawns)>0 then
+		for k,v in pairs(ffa_spawns) do
+			for key, data in pairs(v) do
+				local Location = data.vec
+				local Angle = data.ang
+				local spawn = ents.CreateClientProp()
+				table.insert(ffa_spawns_props,spawn)
+				spawn:SetPos( Location )
+				spawn:SetAngles( Angle )
+				spawn:SetModel("models/Bennyg/plane/re_airboat2.mdl")
+				spawn:Spawn()
+			end
+		end
+	end
+end
+
+net.Receive("sendspawns", function() 
+	local spawns = net.ReadTable()
+	SpawnpointEditorToggle(spawns)
+end)

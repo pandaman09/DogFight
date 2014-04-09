@@ -1,4 +1,14 @@
 
+--[[
+	Player mode Enums
+	MODE_FLY is for normal play
+	MODE_FILM is for df_film
+	MODE_ESPAWN is for spawn editor
+]]
+MODE_FLY = 0
+MODE_FILM = 1
+MODE_ESPAWN = 2
+
 local read = file.Find("maps/df_*.bsp", "GAME")
 
 function radio_play(ply,cmd,args)
@@ -199,3 +209,44 @@ function UpdateSetting(ply, cmd, args)
 end
 
 concommand.Add("df_update" , UpdateSetting )
+
+function GetSpawns(ply, cmd, args)
+	if ply:IsAdmin() or ply:IsSuperAdmin() then
+			if !IsValid(ply) or !ply.Mode==MODE_ESPAWN then return end
+			local idc = ents.FindByClass("df_spawn_idc")
+			local gbu = ents.FindByClass("df_spawn_gbu")
+			local ffa = ents.FindByClass("info_player_start")
+			local spawns = {
+				["idc"]={},
+				["gbu"]={},
+				["ffa"]={}
+			}
+			for k,v in pairs(idc) do
+				local spawn = {
+					["vec"]=v:GetPos(),
+					["ang"]=v:GetAngles()
+				}
+				table.insert(spawns["idc"],spawn)
+			end
+			for k,v in pairs(gbu) do
+				local spawn = {
+					["vec"]=v:GetPos(),
+					["ang"]=v:GetAngles()
+				}
+				table.insert(spawns["gbu"],spawn)
+			end
+			for k,v in pairs(ffa) do
+				local spawn = {
+					["vec"]=v:GetPos(),
+					["ang"]=v:GetAngles()
+				}
+				table.insert(spawns["ffa"],spawn)
+			end
+
+			net.Start("sendspawns")
+				net.WriteTable(spawns)
+			net.Send(ply)
+	end
+end
+
+concommand.Add("getspawns", GetSpawns )

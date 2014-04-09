@@ -167,6 +167,8 @@ CreateClientConVar( "df_forward", 0, true, false )
 
 CreateClientConVar( "df_film", 0, true, true )
 
+CreateClientConVar( "df_editspawns", 0, false, true )
+
 local PANEL = { }
 
 local bCursorEnter = function( b )
@@ -228,6 +230,13 @@ function PANEL:Init( )
 	chk:SetConVar( "df_film" )
 	chk:SetTextColor( Color(255,255,255,255) )
 	chk:SetValue( GetConVarNumber( "df_film" ) )
+	chk:SizeToContents()
+	table.insert(self.Checks, chk)
+	local chk = vgui.Create( "DCheckBoxLabel" , self )
+	chk:SetText( "Spawnpoint Editor (Requires admin)" )
+	chk:SetConVar( "df_editspawns" )
+	chk:SetTextColor( Color(255,255,255,255) )
+	chk:SetValue( GetConVarNumber( "df_editspawns" ) )
 	chk:SizeToContents()
 	table.insert(self.Checks, chk)
 	local but = vgui.Create( "DButton" , self )
