@@ -859,18 +859,21 @@ function CheckSpawnEditor(enable,clear)
 		if table.Count(idc_spawns_props)>0 then
 			for k,v in pairs(idc_spawns_props) do
 				v:Remove()
+				table.remove(idc_spawns_props,k)
 				removed = removed+1
 			end
 		end
 		if table.Count(gbu_spawns_props)>0 then
 			for k,v in pairs(gbu_spawns_props) do
 				v:Remove()
+				table.remove(gbu_spawns_props,k)
 				removed = removed+1
 			end
 		end
 		if table.Count(ffa_spawns_props)>0 then
 			for k,v in pairs(ffa_spawns_props) do
 				v:Remove()
+				table.remove(ffa_spawns_props,k)
 				removed = removed+1
 			end
 		end
