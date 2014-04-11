@@ -1,4 +1,3 @@
-
 AddCSLuaFile( "cl_init.lua" )
 AddCSLuaFile( "shared.lua" )
 
@@ -22,3 +21,23 @@ end
 function ENT:SetTeam(team)
 	self:SetNWInt("team_name_boat", tonumber(team) )
 end
+
+
+
+
+
+util.AddNetworkString("open_spawnpoint_menu")
+util.AddNetworkString("change_spawnpoint_pos")
+
+function ENT:Use(pl, caller, 1)
+	net.Start("open_spawnpoint_menu")
+		net.WriteEntity(self)
+	net.Send(pl)
+end
+
+net.Receive("change_spawnpoint_pos", function(len, pl)
+	local Entity = net.ReadEntity()
+	local Vector = net.ReadVector()
+
+	Entity:SetPos(Vector)
+end)
