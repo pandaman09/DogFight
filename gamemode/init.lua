@@ -36,9 +36,8 @@ util.AddNetworkString( "team" ) -- cl_panels.lua line ~839
 util.AddNetworkString( "send_ul" ) -- player_extension.lua line ~59
 util.AddNetworkString( "send_ul" ) -- unlocks.lua
 
-util.AddNetworkString( "spawnpointeditor" ) -- used for checking spawnpoint editor usage
-util.AddNetworkString( "sendspawns" ) -- used for sending spawnpoint info to the client
-util.AddNetworkString( "create_spawn" ) -- used for creating spawnpoints
+util.AddNetworkString( "updatespawn" ) -- used for creating or modifying spawnpoints - Client to Server
+util.AddNetworkString( "spawnpoint_derma" ) -- used for creating or modifying spawnpoints - Client to Server
 
 
 --[[
@@ -377,18 +376,11 @@ function GM:PlayerSpawn(ply)
 	if tonumber(ply:GetInfo("df_editspawns")) == 1 then
 		if ply:IsAdmin() or ply:IsSuperAdmin() then
 			ply:Spectate(OBS_MODE_ROAMING)
-			net.Start("spawnpointeditor")
-				net.WriteBit(true)
-				net.WriteBit(false)
-			net.Send(ply)
+			StartEditor(ply)
 			ply.Mode = MODE_ESPAWN
 			ply:ChatPrint("Spawn Editor Enabled, Clearing props and spawning new ones!")
 			return
 		end	
-		net.Start("spawnpointeditor")
-			net.WriteBit(false)
-			net.WriteBit(false)
-		net.Send(ply)
 		ply:ChatPrint("You are not an admin and cannot use the Spawnpoint Editor")
 	end
 
@@ -588,13 +580,14 @@ end
 
 --[[
 	Func: GM:PlayerDisconnected
-	Desc: Remove the players plane, if it exists.
+	Desc: Remove the players plane, if it exists. Check to see if the player was editing.
 	NOTE: removed profile saving because mysql.lua handles this already.
 ]]
 function GM:PlayerDisconnected(ply)
 	if IsValid(ply.plane) then
 		ply.plane:Remove()
 	end
+	CheckEditorStatus(ply)
 end
 
 function SpectateOff(ply)
@@ -612,11 +605,8 @@ function SpawnEditorOff(ply)
 	ply:SendNextSpawn(CurTime()+1)
 	ply:SetObserverMode(OBS_MODE_CHASE)
 	ply:SetMoveType(MOVETYPE_OBSERVER)
-	net.Start("spawnpointeditor")
-		net.WriteBit(false)
-		net.WriteBit(true)
-	net.Send(ply)
 	ply:Spawn()
+	CheckEditorStatus(ply)
 end
 
 function GM:KeyPress(ply, key)
@@ -628,5 +618,16 @@ function GM:KeyPress(ply, key)
 	end
 	if ply.Mode==MODE_ESPAWN and tonumber(ply:GetInfo("df_editspawns")) == 0 then
 		SpawnEditorOff(ply)
+	end
+end
+
+function CheckEditorStatus(ply)
+	for k,v in pairs(spawnEditors) do 
+		if v == ply:SteamID() then
+			table.remove(spawnEditors,key)
+		end
+	end
+	if not (table.Count(spawnEditors)>0) then
+		ClearEditorSpawns()
 	end
 end
