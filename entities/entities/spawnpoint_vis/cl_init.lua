@@ -234,6 +234,17 @@ function ENT:Draw()
 	end
 end
 
-function ENT:Use( ply )
-	MsgN("derp")
-end
+
+net.Receive("open_spawnpoint_menu", function(len)
+	//OpenMenu
+
+	//On position change do this:
+	local NewPos = Vector(0, 128, 0)
+	local Entity = net.ReadEntity()
+	if Entity != NULL then
+		net.Start("change_spawnpoint_pos")
+			net.WriteEntity(Entity)
+			net.WriteVector(NewPos)
+		net.SendToServer()
+	end
+end)
