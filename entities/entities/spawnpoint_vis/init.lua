@@ -1,4 +1,3 @@
-
 AddCSLuaFile( "cl_init.lua" )
 AddCSLuaFile( "shared.lua" )
 
@@ -17,8 +16,18 @@ function ENT:Initialize()
 	self:SetNWInt("world_y_max", world_size[5] )
 	self:SetNWInt("world_z_min", world_size[3] )
 	self:SetNWInt("world_z_max", world_size[6] )
+
+	self.Modifier = NULL
 end
 
 function ENT:SetTeam(team)
 	self:SetNWInt("team_name_boat", tonumber(team) )
+end
+
+util.AddNetworkString("Spawner_OpenMenu")
+function ENT:Use(pl, caller)
+	self.Modifier = pl:SteamID()
+
+	net.Start("Spawner_OpenMenu")
+	end.Send(pl)
 end
