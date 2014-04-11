@@ -79,6 +79,7 @@ function ENT:Draw()
 			draw.DrawText( "Press E to modify!", "CV20", 0, -20, Color( 255, 255, 255, 255 ), TEXT_ALIGN_CENTER )
 		end
 	cam.End3D2D()
+
 	if LocalPlayer():GetEyeTrace( ).Entity == ent and input.IsKeyDown( KEY_E ) and !ent.ispressed and !gui.IsGameUIVisible( ) and !gui.IsConsoleVisible() then
 		ent.ispressed = true
 
@@ -104,7 +105,9 @@ function ENT:Draw()
 		team_select:AddChoice( "GBU" )
 		team_select:AddChoice( "FFA" )
 		team_select.OnSelect = function( panel, index, value)
-			ent:SetNWInt( "team_name_boat", team_nums[value] )
+			if IsValid(ent) then
+				ent:SetNWInt( "team_name_boat", team_nums[value] )
+			end
 		end
 
 		local world_x_min = ent:GetNWInt("world_x_min", -10000 )
@@ -163,7 +166,9 @@ function ENT:Draw()
 		world_x_select:SetText( pos.x )
 		world_x_select.OnEnter = function( self )
 			local new_pos = Vector( self:GetFloat() , ent:GetPos().y , ent:GetPos().z )
-			ent:SetPos(new_pos)
+			if IsValid(ent) then
+				ent:SetPos(new_pos)
+			end
 		end
 
 		local world_y_label = vgui.Create( "DLabel", settings )
@@ -176,7 +181,9 @@ function ENT:Draw()
 		world_y_select:SetText( pos.y )
 		world_y_select.OnEnter = function( self )
 			local new_pos = Vector( ent:GetPos().x , self:GetFloat() , ent:GetPos().z )
-			ent:SetPos(new_pos)
+			if IsValid(ent) then
+				ent:SetPos(new_pos)
+			end
 		end
 
 		local world_z_label = vgui.Create( "DLabel", settings )
@@ -189,7 +196,9 @@ function ENT:Draw()
 		world_z_select:SetText( pos.z )
 		world_z_select.OnEnter = function( self )
 			local new_pos = Vector( ent:GetPos().x , ent:GetPos().y , self:GetFloat() )
-			ent:SetPos(new_pos)
+			if IsValid(ent) then
+				ent:SetPos(new_pos)
+			end
 		end
 
 		local angle_pitch_label = vgui.Create( "DLabel", settings )
@@ -202,7 +211,9 @@ function ENT:Draw()
 		angle_pitch_select:SetText( ang.p )
 		angle_pitch_select.OnEnter = function( self )
 			local new_ang = Angle( self:GetFloat() , ent:GetAngles().y , ent:GetAngles().r )
-			ent:SetAngles(new_ang)
+			if IsValid(ent) then
+				ent:SetAngles(new_ang)
+			end
 		end
 
 		local angle_yaw_label = vgui.Create( "DLabel", settings )
@@ -215,7 +226,9 @@ function ENT:Draw()
 		angle_yaw_select:SetText( ang.y )
 		angle_yaw_select.OnEnter = function( self )
 			local new_ang = Angle( ent:GetAngles().p , self:GetFloat() , ent:GetAngles().r )
-			ent:SetAngles(new_ang)
+			if IsValid(ent) then
+				ent:SetAngles(new_ang)
+			end
 		end
 
 		local angle_roll_label = vgui.Create( "DLabel", settings )
@@ -228,12 +241,18 @@ function ENT:Draw()
 		angle_roll_select:SetText( ang.r )
 		angle_roll_select.OnEnter = function( self )
 			local new_ang = Angle( ent:GetAngles().p , ent:GetAngles().y , self:GetFloat() )
-			ent:SetAngles(new_ang)
+			if IsValid(ent) then
+				ent:SetAngles(new_ang)
+			end
+		end
+
+		local spawn_remove = vgui.Create( "DButton" )
+		spawn_remove:SetPos( 150, 270 )
+		spawn_remove:SetText( "Remove Spawn!" )
+		spawn_remove:SetSize( 120, 60 )
+		spawn_remove.DoClick = function()
+		    ent:Remove()
 		end
 
 	end
-end
-
-function ENT:Use( ply )
-	MsgN("derp")
 end
