@@ -19,13 +19,7 @@ function ENT:Initialize()
 	self:SetRenderMode( RENDERMODE_TRANSALPHA )
 	self:SetColor( Color(255,255,255,200) )
 	self:SetUseType(SIMPLE_USE)
-	local world_size = game.GetWorld():GetPhysicsObject():GetAABB()
-	self:SetNWInt("world_x_min", world_size[1] )
-	self:SetNWInt("world_x_max", world_size[4] )
-	self:SetNWInt("world_y_min", world_size[2] )
-	self:SetNWInt("world_y_max", world_size[5] )
-	self:SetNWInt("world_z_min", world_size[3] )
-	self:SetNWInt("world_z_max", world_size[6] )
+	
 	self:SetNWInt("UID", 999 ) --fallback info
 	self:SetNWInt("team_name", 0 ) --fallback info
 end
@@ -47,7 +41,7 @@ function ENT:GetID()
 end
 
 function ENT:Use( a, c )
-	net.Start("spawnpoint_derma")
+	net.Start("spawnpoint_edit_derma")
 		net.WriteEntity(self)
 	net.Send(a)
 end

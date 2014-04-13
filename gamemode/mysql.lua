@@ -18,6 +18,15 @@ local SQLITE_TABLE_CREATE_QUERY = [[
 		tc int(50),
 		ttd int(50)
 	);
+
+	CREATE TABLE IF NOT EXISTS mapspawns (
+		map varchar(50),
+		primary_key int(11) primary key,
+		skey int(11)
+		team tinyint(4),
+		position varchar(50),
+		angle varchar(50)
+	);
 ]]
 
 --[[ 
@@ -102,13 +111,14 @@ local function CreateSQLiteTables()
 	
 	print( "Does Table 'clients' Exist: ", sql.TableExists( "clients" ) )
 	print( "Does Table 'dogfight' Exist: ", sql.TableExists( "dogfight" ) )
+	print( "Does Table 'mapspanws' Exist: ", sql.TableExists( "mapspawns" ) )
 end
 hook.Add("Initialize", "SQLiteTableCreation", CreateSQLiteTables )
 concommand.Add( "SQLite_Check", CreateSQLiteTables ) -- For debugging
 
 -- Check if mysqloo was loaded, not sure if there is a better way to do this.
 if( mysqloo ) then
-	db = db or mysqloo.connect( "127.0.0.1", "root", "test123" , "faintlink", 3306)
+	db = db or mysqloo.connect( "127.0.0.1", "root", "" , "faintlink", 3306)
 
 	function db:onConnectionFailed( errorMessage )
 		Msg("There was an error connecting to the database!\n")
@@ -318,3 +328,33 @@ local function SetAllOffline()
 end
 hook.Add( "ShutDown", "ShuttingDown", SetAllOffline )
 hook.Add( "Initialize", "StartingUp", function() timer.Simple( 1, SetAllOffline ) end)
+
+function GetSpawns(callback)
+	local map = EscapeString(game.GetMap())
+	local query = "SELECT * FROM mapspawns WHERE map = '" .. map .. "'"
+	if callback then
+		dbquery( query, callback)
+	else
+		dbquery( query )
+	end
+end
+
+function UpdateSpawns(key, team, pos, ang, delete, callback)
+	if !isnumber(key) or !isnumber(team) or !isvector(pos) or !isangle(ang) then MsgN("Something has gone wrong, will NOT update spawns on SQL") return false end
+	local minus = 0
+	local query = ""
+	local safe_pos = ""..pos.x.."_"..pos.y.."_"..pos.z..""
+	local safe_ang = ""..ang.p.."_"..ang.y.."_"..ang.r..""
+	local map = game.GetMap()
+	if delete then
+		query = "DELETE FROM mapspawns WHERE skey = "..key.." AND map = '"..map.."'"
+	else
+		query = "INSERT INTO mapspawns (skey, map, team, position, angle) VALUES ("..key..",'"..map.."',"..team..",'"..safe_pos.."','"..safe_ang.."') ON DUPLICATE KEY UPDATE skey ="..key..", team = "..team..", position = '"..safe_pos.."', angle = '"..safe_ang.."'"
+	end
+	if callback then
+		dbquery( query, callback)
+	else
+		dbquery( query )
+	end
+end
+

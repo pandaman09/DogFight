@@ -74,43 +74,7 @@ function ENT:Draw()
 	cam.End3D2D()
 end
 
-function ENT:QuickUpdatePos(pos)
-	local ent = self
-	net.Start("updatespawn")
-		--uid
-		net.WriteInt(ent:GetNWInt("UID", 999 ),32)
-		--spawn_team
-		net.WriteInt(ent:GetNWInt( "team_name", 0 ),16)
-		--spawn_pos
-		net.WriteTable({pos.x,pos.y,pos.z})
-		--spawn_angle
-		local ang = ent:GetAngles()
-		net.WriteTable({ang.p,ang.y,ang.r})
-		--spawn_deleted
-		local exists = IsValid(ent)
-		net.WriteBit(exists)
-	net.SendToServer()
-end
-
-function ENT:QuickUpdateAng(ang)
-	local ent = self
-	net.Start("updatespawn")
-		--uid
-		net.WriteInt(ent:GetNWInt("UID", 999 ),32)
-		--spawn_team
-		net.WriteInt(ent:GetNWInt( "team_name", 0 ),16)
-		--spawn_pos
-		local pos = ent:GetPos()
-		net.WriteTable({pos.x,pos.y,pos.z})
-		--spawn_angle
-		net.WriteTable({ang.p,ang.y,ang.r})
-		--spawn_deleted
-		local exists = IsValid(ent)
-		net.WriteBit(exists)
-	net.SendToServer()
-end
-
-function ENT:FullUpdate(pos, ang)
+function ENT:FullUpdate(pos, ang, delete)
 	local ent = self
 	net.Start("updatespawn")
 		--uid
@@ -122,12 +86,11 @@ function ENT:FullUpdate(pos, ang)
 		--spawn_angle
 		net.WriteTable({ang.p,ang.y,ang.r})
 		--spawn_deleted
-		local exists = IsValid(ent)
-		net.WriteBit(exists)
+		net.WriteBit(delete)
 	net.SendToServer()
 end
 
-net.Receive("spawnpoint_derma", function(len,ply)
+net.Receive("spawnpoint_edit_derma", function(len,ply)
 	local ent = net.ReadEntity()
 	local pos = ent:GetPos()
 	local ang = ent:GetAngles()
@@ -135,7 +98,7 @@ net.Receive("spawnpoint_derma", function(len,ply)
 	local H = ScrH()
 	local W = ScrW()
 	settings:SetPos((W/2)-150,(H/2)-200)
-	settings:SetSize(300,400)
+	settings:SetSize(300,380)
 	settings:SetTitle("Settings")
 	settings:SetVisible(true)
 	settings:SetDraggable(true)
@@ -143,13 +106,10 @@ net.Receive("spawnpoint_derma", function(len,ply)
 	settings:MakePopup()
 	settings.OnClose = function()
 		ent.ispressed = false
-		local pos = Vector(world_x_select:GetFloat(), world_y_select:GetFloat(), world_z_select:GetFloat())
-	    local ang = Angle(angle_pitch_select:GetFloat(), angle_yaw_select:GetFloat(), angle_roll_select:GetFloat())
-		ent:FullUpdate(pos, ang)
 	end
 	
 	local team_cur = ent:GetNWInt( "team_name", 0 )
-	local team_label = vgui.Create( "DLabel", settings )
+	team_label = vgui.Create( "DLabel", settings )
 	team_label:SetPos( 50, 35 )
 	team_label:SetText( "Team: "..team_names[team_cur] )
 	team_select = vgui.Create( "DComboBox", settings )
@@ -162,55 +122,10 @@ net.Receive("spawnpoint_derma", function(len,ply)
 	team_select.OnSelect = function( panel, index, value)
 		if IsValid(ent) then
 			ent:SetNWInt( "team_name", team_nums[value] )
+			team_label:SetText( "Team: "..value )
 		end
 	end
 
-	local world_x_min = ent:GetNWInt("world_x_min", -10000 )
-	local world_x_max = ent:GetNWInt("world_x_max", 10000 )
-	local world_y_min = ent:GetNWInt("world_y_min", -10000 )
-	local world_y_max = ent:GetNWInt("world_y_max", 10000 )
-	local world_z_min = ent:GetNWInt("world_z_min", -10000 )
-	local world_z_max = ent:GetNWInt("world_z_max", 10000 )
-	--[[
-	local world_x_select = vgui.Create( "DNumSlider", settings )
-	world_x_select:SetPos( 10, 40 )
-	world_x_select:SetSize( 300, 100 )
-	world_x_select:SetText( "Position X" )
-	world_x_select:SetMin( world_x_min )
-	world_x_select:SetMax( world_x_max )
-	world_x_select:SetDecimals( 0 )
-	world_x_select:UpdateNotches()
-	world_x_select.OnValueChanged = function ( val )
-		local new_pos = Vector( val , pos.y , pos.z )
-		self:SetPos(new_pos)
-	end
-
-	local world_y_select = vgui.Create( "DNumSlider", settings )
-	world_y_select:SetPos( 10, 60 )
-	world_y_select:SetSize( 300, 100 )
-	world_y_select:SetText( "Position Y" )
-	world_y_select:SetMin( world_y_min )
-	world_y_select:SetMax( world_y_max )
-	world_y_select:SetDecimals( 0 )
-	world_y_select:UpdateNotches()
-	world_y_select.OnValueChanged = function ( val )
-		local new_pos = Vector( pos.x , val , pos.z )
-		self:SetPos(new_pos)
-	end
-
-	local world_z_select = vgui.Create( "DNumSlider", settings )
-	world_z_select:SetPos( 10, 80 )
-	world_z_select:SetSize( 300, 100 )
-	world_z_select:SetText( "Position Z" )
-	world_z_select:SetMin( world_z_min )
-	world_z_select:SetMax( world_z_max )
-	world_z_select:SetDecimals( 0 )
-	world_z_select:UpdateNotches()
-	world_z_select.OnValueChanged = function ( val )
-		local new_pos = Vector( pos.x, pos.y , val )
-		self:SetPos(new_pos)
-	end
-	]]
 	local world_x_label = vgui.Create( "DLabel", settings )
 	world_x_label:SetPos( 50, 60 )
 	world_x_label:SetText( "Position X" )
@@ -219,13 +134,6 @@ net.Receive("spawnpoint_derma", function(len,ply)
 	world_x_select:SetSize( 100, 25 )
 	world_x_select:SetNumeric( true )
 	world_x_select:SetText( pos.x )
-	world_x_select.OnEnter = function( self )
-		local new_pos = Vector( self:GetFloat() , ent:GetPos().y , ent:GetPos().z )
-		if IsValid(ent) then
-			--ent:SetPos(new_pos)
-			ent:QuickUpdatePos(new_pos)
-		end
-	end
 
 	local world_y_label = vgui.Create( "DLabel", settings )
 	world_y_label:SetPos( 50, 90 )
@@ -235,13 +143,6 @@ net.Receive("spawnpoint_derma", function(len,ply)
 	world_y_select:SetSize( 100, 25 )
 	world_y_select:SetNumeric( true )
 	world_y_select:SetText( pos.y )
-	world_y_select.OnEnter = function( self )
-		local new_pos = Vector( ent:GetPos().x , self:GetFloat() , ent:GetPos().z )
-		if IsValid(ent) then
-			--ent:SetPos(new_pos)
-			ent:QuickUpdatePos(new_pos)
-		end
-	end
 
 	local world_z_label = vgui.Create( "DLabel", settings )
 	world_z_label:SetPos( 50, 120 )
@@ -251,13 +152,6 @@ net.Receive("spawnpoint_derma", function(len,ply)
 	world_z_select:SetSize( 100, 25 )
 	world_z_select:SetNumeric( true )
 	world_z_select:SetText( pos.z )
-	world_z_select.OnEnter = function( self )
-		local new_pos = Vector( ent:GetPos().x , ent:GetPos().y , self:GetFloat() )
-		if IsValid(ent) then
-			--ent:SetPos(new_pos)
-			ent:QuickUpdatePos(new_pos)
-		end
-	end
 
 	local angle_pitch_label = vgui.Create( "DLabel", settings )
 	angle_pitch_label:SetPos( 50, 150 )
@@ -267,13 +161,6 @@ net.Receive("spawnpoint_derma", function(len,ply)
 	angle_pitch_select:SetSize( 100, 25 )
 	angle_pitch_select:SetNumeric( true )
 	angle_pitch_select:SetText( ang.p )
-	angle_pitch_select.OnEnter = function( self )
-		local new_ang = Angle( self:GetFloat() , ent:GetAngles().y , ent:GetAngles().r )
-		if IsValid(ent) then
-			--ent:SetAngles(new_ang)
-			ent:QuickUpdatePos(new_pos)
-		end
-	end
 
 	local angle_yaw_label = vgui.Create( "DLabel", settings )
 	angle_yaw_label:SetPos( 50, 180 )
@@ -283,13 +170,6 @@ net.Receive("spawnpoint_derma", function(len,ply)
 	angle_yaw_select:SetSize( 100, 25 )
 	angle_yaw_select:SetNumeric( true )
 	angle_yaw_select:SetText( ang.y )
-	angle_yaw_select.OnEnter = function( self )
-		local new_ang = Angle( ent:GetAngles().p , self:GetFloat() , ent:GetAngles().r )
-		if IsValid(ent) then
-			--ent:SetAngles(new_ang)
-			ent:QuickUpdateAng(new_ang)
-		end
-	end
 
 	local angle_roll_label = vgui.Create( "DLabel", settings )
 	angle_roll_label:SetPos( 50, 210 )
@@ -299,36 +179,130 @@ net.Receive("spawnpoint_derma", function(len,ply)
 	angle_roll_select:SetSize( 100, 25 )
 	angle_roll_select:SetNumeric( true )
 	angle_roll_select:SetText( ang.r )
-	angle_roll_select.OnEnter = function( self )
-		local new_ang = Angle( ent:GetAngles().p , ent:GetAngles().y , self:GetFloat() )
-		if IsValid(ent) then
-			--ent:SetAngles(new_ang)
-			ent:QuickUpdateAng(new_ang)
-		end
-	end
 
 	local spawn_update = vgui.Create( "DButton", settings)
 	spawn_update:SetPos( 90, 240 )
-	spawn_update:SetText( "Update Point (Local)" )
+	spawn_update:SetText( "Update Point" )
 	spawn_update:SetSize( 120, 60 )
 	spawn_update.DoClick = function()
 	    if IsValid(ent) then
-	    	local new_pos = Vector(world_x_select:GetFloat(), world_y_select:GetFloat(), world_z_select:GetFloat())
-	    	local new_ang = Angle(angle_pitch_select:GetFloat(), angle_yaw_select:GetFloat(), angle_roll_select:GetFloat())
-			--ent:SetPos(new_pos)
-			--ent:SetAngles(new_ang)
-			ent:FullUpdate(new_pos,new_ang)
+	    	local new_pos = Vector(world_x_select:GetInt(), world_y_select:GetInt(), world_z_select:GetInt())
+	    	local new_ang = Angle(angle_pitch_select:GetInt(), angle_yaw_select:GetInt(), angle_roll_select:GetInt())
+			ent:FullUpdate(new_pos, new_ang, false)
 		end
 	end
 
 	local spawn_remove = vgui.Create( "DButton", settings )
-	spawn_remove:SetPos( 90, 320 )
+	spawn_remove:SetPos( 90, 310 )
 	spawn_remove:SetText( "Remove Spawn!" )
 	spawn_remove:SetSize( 120, 60 )
 	spawn_remove.DoClick = function()
-	    ent:Remove()
-	    local new_pos = Vector(0,0,0)
-	    local new_ang = Angle(0,0,0)
-	    ent:FullUpdate(new_pos,new_ang)
+		if IsValid(ent) then
+		    local new_pos = Vector(0,0,0)
+		    local new_ang = Angle(0,0,0)
+		    ent:FullUpdate(new_pos,new_ang, true)
+		end
+	end
+end)
+
+net.Receive("spawnpoint_create_derma", function(len,ply)
+	local team_number = 0
+	local pos = LocalPlayer():GetPos()
+	local ang = LocalPlayer():EyeAngles()
+
+	create_spawn = vgui.Create("DFrame")
+	local H = ScrH()
+	local W = ScrW()
+	create_spawn:SetPos((W/2)-150,(H/2)-200)
+	create_spawn:SetSize(300,330)
+	create_spawn:SetTitle("New Spawn")
+	create_spawn:SetVisible(true)
+	create_spawn:SetDraggable(true)
+	create_spawn:ShowCloseButton(true)
+	create_spawn:MakePopup()
+	
+	create_team_label = vgui.Create( "DLabel", create_spawn )
+	create_team_label:SetPos( 50, 35 )
+	create_team_label:SetText( "Team: "..team_names[team_number] )
+	create_team_select = vgui.Create( "DComboBox", create_spawn )
+	create_team_select:SetPos( 150, 35 )
+	create_team_select:SetSize( 100, 20 )
+	create_team_select:SetValue( "Team Name" )
+	create_team_select:AddChoice( "IDC" )
+	create_team_select:AddChoice( "GBU" )
+	create_team_select:AddChoice( "FFA" )
+	create_team_select.OnSelect = function( panel, index, value)
+		team_number = team_nums[value]
+		create_team_label:SetText( "Team: "..value )
+
+	end
+
+	local world_x_label = vgui.Create( "DLabel", create_spawn )
+	world_x_label:SetPos( 50, 60 )
+	world_x_label:SetText( "Position X" )
+	create_world_x_select = vgui.Create( "DTextEntry", create_spawn )	-- create the form as a child of frame
+	create_world_x_select:SetPos( 150, 60 )
+	create_world_x_select:SetSize( 100, 25 )
+	create_world_x_select:SetNumeric( true )
+	create_world_x_select:SetText( pos.x )
+
+	local world_y_label = vgui.Create( "DLabel", create_spawn )
+	world_y_label:SetPos( 50, 90 )
+	world_y_label:SetText( "Position Y" )
+	create_world_y_select = vgui.Create( "DTextEntry", create_spawn )	-- create the form as a child of frame
+	create_world_y_select:SetPos( 150, 90 )
+	create_world_y_select:SetSize( 100, 25 )
+	create_world_y_select:SetNumeric( true )
+	create_world_y_select:SetText( pos.y )
+
+	local world_z_label = vgui.Create( "DLabel", create_spawn )
+	world_z_label:SetPos( 50, 120 )
+	world_z_label:SetText( "Position Z" )
+	create_world_z_select = vgui.Create( "DTextEntry", create_spawn )	-- create the form as a child of frame
+	create_world_z_select:SetPos( 150, 120 )
+	create_world_z_select:SetSize( 100, 25 )
+	create_world_z_select:SetNumeric( true )
+	create_world_z_select:SetText( pos.z )
+
+	local angle_pitch_label = vgui.Create( "DLabel", create_spawn )
+	angle_pitch_label:SetPos( 50, 150 )
+	angle_pitch_label:SetText( "Angle Pitch" )
+	create_angle_pitch_select = vgui.Create( "DTextEntry", create_spawn )	-- create the form as a child of frame
+	create_angle_pitch_select:SetPos( 150, 150 )
+	create_angle_pitch_select:SetSize( 100, 25 )
+	create_angle_pitch_select:SetNumeric( true )
+	create_angle_pitch_select:SetText( ang.p )
+
+	local angle_yaw_label = vgui.Create( "DLabel", create_spawn )
+	angle_yaw_label:SetPos( 50, 180 )
+	angle_yaw_label:SetText( "Angle Yaw" )
+	create_angle_yaw_select = vgui.Create( "DTextEntry", create_spawn )	-- create the form as a child of frame
+	create_angle_yaw_select:SetPos( 150, 180 )
+	create_angle_yaw_select:SetSize( 100, 25 )
+	create_angle_yaw_select:SetNumeric( true )
+	create_angle_yaw_select:SetText( ang.y )
+
+	local angle_roll_label = vgui.Create( "DLabel", create_spawn )
+	angle_roll_label:SetPos( 50, 210 )
+	angle_roll_label:SetText( "Angle Roll" )
+	create_angle_roll_select = vgui.Create( "DTextEntry", create_spawn )	-- create the form as a child of frame
+	create_angle_roll_select:SetPos( 150, 210 )
+	create_angle_roll_select:SetSize( 100, 25 )
+	create_angle_roll_select:SetNumeric( true )
+	create_angle_roll_select:SetText( ang.r )
+
+	local spawn_update = vgui.Create( "DButton", create_spawn)
+	spawn_update:SetPos( 90, 240 )
+	spawn_update:SetText( "Create Point" )
+	spawn_update:SetSize( 120, 60 )
+	spawn_update.DoClick = function()
+	    net.Start("createspawn")
+			--spawn_team
+			net.WriteInt( team_number ,16)
+			--spawn_pos
+			net.WriteTable({create_world_x_select:GetInt(),create_world_y_select:GetInt(),create_world_z_select:GetInt()})
+			--spawn_angle
+			net.WriteTable({create_angle_pitch_select:GetInt(),create_angle_yaw_select:GetInt(),create_angle_roll_select:GetInt()})
+		net.SendToServer()
 	end
 end)

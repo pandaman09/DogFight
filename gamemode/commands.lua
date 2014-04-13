@@ -210,6 +210,13 @@ end
 
 concommand.Add("df_update" , UpdateSetting )
 
+--[[
+	Spawn editor stuff!
+]]
+
+idc_spawns = idc_spawns or {}
+gbu_spawns = gbu_spawns or {}
+ffa_spawns = ffa_spawns or {}
 idc_spawns_props = idc_spawns_props or {}
 gbu_spawns_props = gbu_spawns_props or {}
 ffa_spawns_props = ffa_spawns_props or {}
@@ -217,16 +224,10 @@ spawnEditorEnabled = false
 spawnEditors = {}
 
 function StartEditor(ply)
-	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !ply.Mode==MODE_ESPAWN then return end
+	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==MODE_ESPAWN) then return end
 	table.insert(spawnEditors,ply:SteamID())
 	if spawnEditorEnabled==true then ply:ChatPrint("Props already spawned. Editing enabled.") return end
 	spawnEditorEnabled = true
-
-	local idc_spawns = ents.FindByClass("df_spawn_idc")
-	local gbu_spawns = ents.FindByClass("df_spawn_gbu")
-	local ffa_spawns = ents.FindByClass("info_player_start")
-
-	ply:ChatPrint("Spawning props for editor.")
 
 	if table.Count(idc_spawns)>0 then
 		for k,v in pairs(idc_spawns) do
@@ -241,7 +242,7 @@ function StartEditor(ply)
 			spawn:SetRenderMode( RENDERMODE_TRANSALPHA )
 			spawn:SetColor( Color(255,255,255,200) )
 			
-			table.insert(idc_spawns_props,spawn)
+			idc_spawns_props[k]=spawn
 		end
 	end
 	
@@ -258,7 +259,7 @@ function StartEditor(ply)
 			spawn:SetRenderMode( RENDERMODE_TRANSALPHA )
 			spawn:SetColor( Color(255,255,255,200) )
 			
-			table.insert(gbu_spawns_props,spawn)
+			gbu_spawns_props[k]=spawn
 		end
 	end
 	
@@ -275,7 +276,7 @@ function StartEditor(ply)
 			spawn:SetRenderMode( RENDERMODE_TRANSALPHA )
 			spawn:SetColor( Color(255,255,255,200) )
 
-			table.insert(ffa_spawns_props,spawn)
+			ffa_spawns_props[k]=spawn
 		end
 	end
 end
@@ -303,102 +304,148 @@ function ClearEditorSpawns()
 	end
 end
 
-function SpawnExists(UID)
-	local idc_spawns = ents.FindByClass("df_spawn_idc")
-	local gbu_spawns = ents.FindByClass("df_spawn_gbu")
-	local ffa_spawns = ents.FindByClass("info_player_start")
-	if (UID>1000) and (UID<2000) then
-		return 
-	elseif (UID>2000) and (UID<3000) then
-		return 
-	elseif (UID>3000) and (UID<4000) then
-		return IsValid(ffa_spawns[UID-3000])
+
+function CreateSpawn(UID, team, pos, ang, table_use)
+	MsgN("Creating new spawn at [",pos,"] angles of [",ang,"]")
+	local spawn
+	local id
+	if team == 1 then
+		spawn = ents.Create("df_spawn_idc")
+		id = UID-1000
+	elseif team == 2 then 
+		spawn = ents.Create("df_spawn_gbu")
+		id = UID-2000
+	elseif team == 3 then 
+		spawn = ents.Create("info_player_start")
+		id = UID-3000
 	end
+	spawn:SetPos( pos )
+	spawn:SetAngles( ang )
+	spawn:Spawn()
+	--spawn:SetTeam(team)
+	--spawn:SetID(UID)
+	spawn:SetRenderMode( RENDERMODE_TRANSALPHA )
+	spawn:SetColor( Color(255,255,255,200) )
+	table.insert( table_use, id, spawn )
 end
 
-function CreateSpawn(UID, team, pos, ang, table)
+function CreateSpawnProp(UID, team, pos, ang, table_use)
+	MsgN("Creating new spawn prop at [",pos,"] angles of [",ang,"]")
 	local spawn = ents.Create("spawnpoint_vis")
 	spawn:SetPos( pos )
 	spawn:SetAngles( ang )
+	spawn:Spawn()
 	spawn:SetTeam(team)
 	spawn:SetID(UID)
 	spawn:SetRenderMode( RENDERMODE_TRANSALPHA )
 	spawn:SetColor( Color(255,255,255,200) )
-	spawn:Spawn()
-	table.insert(table,spawn)
+	local id = UID - (team*1000)
+	table.insert( table_use, id, spawn )
 end
 
-function UpdateEditorSpawns( exists, UID, team, pos, ang )
-	local idc_spawns = ents.FindByClass("df_spawn_idc")
-	local gbu_spawns = ents.FindByClass("df_spawn_gbu")
-	local ffa_spawns = ents.FindByClass("info_player_start")
+function UpdateEditorSpawns( UID, team, pos, ang, delete )
+	print(UID,team,pos,ang,delete)
 	if (UID>1000) and (UID<2000) then
 		--idc_spawns stuff
 		local ID = UID-1000
-		if IsValid(idc_spawns[ID]) then
-			for k,v in pairs(idc_spawns) do
-				if k == ID then
-					if isvector(pos) and util.IsInWorld(pos) then
-						v:SetPos(pos)
-						MsgN("Type:"..type(pos).." string:"..tostring(pos))
-					end
-					if isangle(ang) and (v:GetAngles()!=ang) then
-						v:SetAngles(ang)
-					end
-					if !exists then
-						v:Remove()
-						MsgN("IDC SPAWN - ID: "..ID.." WAS REMOVED!")
-					end
-				end
+		if IsValid(idc_spawns_props[ID]) then
+			local ent = idc_spawns_props[ID]
+			if isvector(pos) and util.IsInWorld(pos) then
+				ent:SetPos(pos)
+			end
+			if isangle(ang) and (ent:GetAngles()!=ang) then
+				ent:SetAngles(ang)
+			end
+			if delete==true then
+				ent:Remove()
+				MsgN("IDC SPAWN PROP - ID: "..ID.." WAS REMOVED!")
 			end
 		else
-			CreateSpawn(UID, team, pos, ang, idc_spawns_props)
+			CreateSpawnProp(UID, team, pos, ang, idc_spawns_props)
 		end
+		if IsValid(idc_spawns[ID]) then
+			local ent = idc_spawns[ID]
+			if isvector(pos) and util.IsInWorld(pos) then
+				ent:SetPos(pos)
+			end
+			if isangle(ang) and (ent:GetAngles()!=ang) then
+				ent:SetAngles(ang)
+			end
+			if delete==true then
+				ent:Remove()
+				MsgN("IDC SPAWN - ID: "..ID.." WAS REMOVED!")
+			end
+		else
+			CreateSpawn(UID, team, pos, ang, idc_spawns)
+		end
+		UpdateSpawns(UID, team, pos, ang, delete, function(data) PrintTable(data) end)
 	elseif (UID>2000) and (UID<3000) then
 		local ID = UID-2000
-		if IsValid(gbu_spawns[ID]) then
-			for k,v in pairs(gbu_spawns) do
-				if k == ID then
-					if isvector(pos) and util.IsInWorld(pos) then
-						v:SetPos(pos)
-						MsgN("Type:"..type(pos).." string:"..tostring(pos))
-					end
-					if isangle(ang) and (v:GetAngles()!=ang) then
-						v:SetAngles(ang)
-					end
-					if !exists then
-						v:Remove()
-						MsgN("GBU SPAWN - ID: "..ID.." WAS REMOVED!")
-					end
-				end
+		if IsValid(gbu_spawns_props[ID]) then
+			local ent = gbu_spawns_props[ID]
+			if isvector(pos) and util.IsInWorld(pos) then
+				ent:SetPos(pos)
+			end
+			if isangle(ang) and (ent:GetAngles()!=ang) then
+				ent:SetAngles(ang)
+			end
+			if delete==true then
+				ent:Remove()
+				MsgN("GBU SPAWN PROP - ID: "..ID.." WAS REMOVED!")
 			end
 		else
-			CreateSpawn(UID, team, pos, ang, gbu_spawns_props)
+			CreateSpawnProp(UID, team, pos, ang, gbu_spawns_props)
 		end
+		if IsValid(gbu_spawns[ID]) then
+			local ent = gbu_spawns[ID]
+			if isvector(pos) and util.IsInWorld(pos) then
+				ent:SetPos(pos)
+			end
+			if isangle(ang) and (ent:GetAngles()!=ang) then
+				ent:SetAngles(ang)
+			end
+			if delete==true then
+				ent:Remove()
+				MsgN("GBU SPAWN - ID: "..ID.." WAS REMOVED!")
+			end
+		else
+			CreateSpawn(UID, team, pos, ang, gbu_spawns)
+		end
+		UpdateSpawns(UID, team, pos, ang, delete, function(data) PrintTable(data) end)
 	elseif (UID>3000) and (UID<4000) then
 		--ffa_spawns stuff
 		local ID = UID-3000
-		if IsValid(ffa_spawns[ID]) then
-			for k,v in pairs(ffa_spawns) do
-				if k == ID then
-					if isvector(pos) and util.IsInWorld(pos) then
-						MsgN("Changing from ",v:GetPos()," to ",pos)
-						v:SetPos(pos)
-						MsgN("Type:",type(pos)," string:",pos)
-						MsgN("At: ",v:GetPos())
-					end
-					if isangle(ang) and (v:GetAngles()!=ang) then
-						v:SetAngles(ang)
-					end
-					if !exists then
-						v:Remove()
-						MsgN("FFA SPAWN - ID: "..ID.." WAS REMOVED!")
-					end
-				end
+		if IsValid(ffa_spawns_props[ID]) then
+			local ent = ffa_spawns_props[ID]
+			if isvector(pos) and util.IsInWorld(pos) then
+				ent:SetPos(pos)
+			end
+			if isangle(ang) and (ent:GetAngles()!=ang) then
+				ent:SetAngles(ang)
+			end
+			if delete==true then
+				ent:Remove()
+				MsgN("FFA SPAWN PROP - ID: "..ID.." WAS REMOVED!")
 			end
 		else
-			CreateSpawn(UID, team, pos, ang, ffa_spawns_props)
+			CreateSpawnProp(UID, team, pos, ang, ffa_spawns_props)
 		end
+		if IsValid(ffa_spawns[ID]) then
+			local ent = ffa_spawns[ID]
+			if isvector(pos) and util.IsInWorld(pos) then
+				ent:SetPos(pos)
+			end
+			if isangle(ang) and (ent:GetAngles()!=ang) then
+				ent:SetAngles(ang)
+			end
+			if delete==true then
+				ent:Remove()
+				MsgN("FFA SPAWN - ID: "..ID.." WAS REMOVED!")
+			end
+		else
+			CreateSpawn(UID, team, pos, ang, ffa_spawns)
+		end
+		UpdateSpawns(UID, team, pos, ang, delete, function(data) PrintTable(data) end)
 	else
 		--UID INVALID!
 		MsgN("Invalid spawn. Something went wrong.")
@@ -406,7 +453,7 @@ function UpdateEditorSpawns( exists, UID, team, pos, ang )
 end
 
 net.Receive("updatespawn", function(len, ply)
-	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !ply.Mode==MODE_ESPAWN then return end
+	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==MODE_ESPAWN) then return end
 	--id
 	local UID = net.ReadInt(32)
 	--spawn_team
@@ -418,6 +465,33 @@ net.Receive("updatespawn", function(len, ply)
 	local ang_tbl = net.ReadTable()
 	local ang = Angle( ang_tbl[1], ang_tbl[2], ang_tbl[3] )
 	--spawn_deleted
-	local exists = net.ReadBit()
-	UpdateEditorSpawns( exists, UID, team, pos, ang )
+	local delete = tobool(net.ReadBit())
+	UpdateEditorSpawns( UID, team, pos, ang, delete )
 end)
+
+net.Receive("createspawn", function(len, ply)
+	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==MODE_ESPAWN) then return end
+
+	local team = net.ReadInt(16)
+	local pos_tbl = net.ReadTable()
+	local pos = Vector( pos_tbl[1], pos_tbl[2], pos_tbl[3] )
+	local ang_tbl = net.ReadTable()
+	local ang = Angle( ang_tbl[1], ang_tbl[2], ang_tbl[3] )
+	local UID = 0
+	if team == 1 then
+		UID = 1000+table.Count(idc_spawns)+1
+	elseif team == 2 then 
+		UID = 2000+table.Count(gbu_spawns)+1
+	elseif team == 3 then 
+		UID = 3000+table.Count(ffa_spawns)+1
+	end
+
+	UpdateEditorSpawns( UID, team, pos, ang, false )
+end)
+
+function NewSpawnPoint(ply, cmd, args)
+	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==MODE_ESPAWN) then return end
+	net.Start("spawnpoint_create_derma")
+	net.Send(ply)
+end
+concommand.Add("df_newspawn" , NewSpawnPoint )

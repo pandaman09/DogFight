@@ -36,9 +36,10 @@ util.AddNetworkString( "team" ) -- cl_panels.lua line ~839
 util.AddNetworkString( "send_ul" ) -- player_extension.lua line ~59
 util.AddNetworkString( "send_ul" ) -- unlocks.lua
 
-util.AddNetworkString( "updatespawn" ) -- used for creating or modifying spawnpoints - Client to Server
-util.AddNetworkString( "spawnpoint_derma" ) -- used for creating or modifying spawnpoints - Client to Server
-
+util.AddNetworkString( "updatespawn" ) -- used for modifying or deleting spawnpoints - Client to Server
+util.AddNetworkString( "spawnpoint_edit_derma" ) -- used for modifying or deleting spawnpoints - Client to Server
+util.AddNetworkString( "createspawn" ) -- used for creating spawnpoints - Client to Server
+util.AddNetworkString( "spawnpoint_create_derma" ) -- used for creating spawnpoints - Client to Server
 
 --[[
 	Resource Table
@@ -74,65 +75,16 @@ gamemode.SpawnPoints.maps = {}
 -- Incase we couldn't get custom map spawns.
 gamemode.SpawnPoints.Fallbacks = {
 	[1]={
-		["vec"]=Vector(308, -823, 4000),
+		["vec"]=Vector(-108, -100, 2000),
 		["ang"]=Angle(0,0,0)
 	},
 	[2]={
-		["vec"]=Vector(-604, -121, 4000),
+		["vec"]=Vector(0, 0, 2000),
 		["ang"]=Angle(0,0,0)
 	},
 	[3]={
-		["vec"]=Vector(-99, -563, 4000),
+		["vec"]=Vector(100, 100, 2000),
 		["ang"]=Angle(0,0,0)
-	}
-}
-
---	dfa_rsi
-gamemode.SpawnPoints.maps[ "dfa_rsi" ] = {
-	FreeForAll = {
-		[1]={
-			["vec"]=Vector(308, -823, 4000),
-			["ang"]=Angle(0,0,0)
-		},
-		[2]={
-			["vec"]=Vector(-604, -121, 4000),
-			["ang"]=Angle(0,0,0)
-		},
-		[3]={
-			["vec"]=Vector(-99, -563, 4000),
-			["ang"]=Angle(0,0,0)
-		}
-	},
-
-	TeamBased = {
-		["idc"] = {
-			[1]={
-				["vec"]=Vector(7791, -6489, 3000),
-				["ang"]=Angle(0,0,0)
-			},
-			[2]={
-				["vec"]=Vector(7591, -6489, 3000),
-				["ang"]=Angle(0,0,0)
-			},
-			[3]={
-				["vec"]=Vector(7891, -6489, 3000),
-				["ang"]=Angle(0,0,0)
-			}
-		},
-		["gbu"] = {
-			[1]={
-				["vec"]=Vector(-800, -823, 4000),
-				["ang"]=Angle(0,0,0)
-			},
-			[2]={
-				["vec"]=Vector(-800, -121, 4000),
-				["ang"]=Angle(0,0,0)
-			},
-			[3]={
-				["vec"]=Vector(-800, -563, 4000),
-				["ang"]=Angle(0,0,0)
-			}
-		}
 	}
 }
 
@@ -158,53 +110,62 @@ function GM:InitPostEntity()
 		v:Remove();
 	end
 
-	local Spawns = gamemode.SpawnPoints
+	GetSpawns(function(data)
+		self:CheckSpawns(data)
+	end)
+end
 
-	-- Create the spawns if it's team based.
-	local map = game.GetMap()
-	local mapHasSpawns = ( IsValid(Spawns.maps[map]) and Count(Spawns.maps[map])>0 )
-	if !IsValid(Spawns.maps[map]) or Count(Spawns.maps[map])==0 then
+function GM:CheckSpawns(tbl)
+
+	local spawns = tbl or {}
+	
+	local mapHasSpawns = ( spawns!=nil and spawns[1]!=nil )
+
+	local fallback = false
+
+	if !mapHasSpawns then
 		Msg("No Spawn points for this map! Go to Settings menu and enable Spawnpoint Editing\n")
-	--	return
+		fallback = true
 	end
 
-	if( mapHasSpawns and TEAM_BASED ) then
-		local TeamSpawns = Spawns.maps[map].TeamBased
-		for _, info in pairs( TeamSpawns["idc"] ) do
-			local Location = info.vec
-			local Angle = info.ang
-			print( "SPAWNING POINT df_spawn_idc" )
-			local SpawnPoint = ents.Create( "df_spawn_idc" )
+	self:CreateSpawns(fallback, tbl)
+
+end
+
+idc_spawns = idc_spawns or {}
+gbu_spawns = gbu_spawns or {}
+ffa_spawns = ffa_spawns or {}
+
+function GM:CreateSpawns(fallback, tbl)
+	if !fallback and tbl then
+		table.sort(tbl, function(a,b) return a.skey > b.skey end)
+		for _,info in pairs( tbl ) do
+			local ID = info.skey - (1000*info.team)
+			local string_pos = string.Explode("_",info.position)
+			local Location = Vector(string_pos[1],string_pos[2],string_pos[3])
+			local string_ang = string.Explode("_",info.angle)
+			local Angle = Angle(string_ang[1],string_ang[2],string_ang[3])
+			local SpawnPoint
+			if info.team == 1 then
+				SpawnPoint = ents.Create( "df_spawn_idc" )
+				idc_spawns[ID] = SpawnPoint
+			elseif info.team == 2 then
+				SpawnPoint = ents.Create( "df_spawn_gbu" )
+				gbu_spawns[ID] = SpawnPoint
+			elseif info.team == 3 then
+				SpawnPoint = ents.Create( "info_player_start" )
+				ffa_spawns[ID] = SpawnPoint
+			end
 			SpawnPoint:SetPos( Location )
 			SpawnPoint:SetAngles( Angle )
-			SpawnPoint:Spawn()				
-		end
-		for _, info in pairs( TeamSpawns["gbu"] ) do
-			local Location = info.vec
-			local Angle = info.ang
-			print( "SPAWNING POINT df_spawn_gbu" )
-			local SpawnPoint = ents.Create( "df_spawn_gbu" )
-			SpawnPoint:SetPos( Location )
-			SpawnPoint:SetAngles( Angle )
-			SpawnPoint:Spawn()				
-		end
-		return
-		
-	elseif( mapHasSpawns and not TEAM_BASED) then	-- Otherwise create the free for all points.
-		local FreeForAll = Spawns.maps[map].FreeForAll
-		for _, info in pairs( FreeForAll ) do
-			local Location = info.vec
-			local Angle = info.ang
-			print( "SPAWNING POINT info_player_start" )
-			local SpawnPoint = ents.Create( "info_player_start" )
-			SpawnPoint:SetPos( Location )
-			SpawnPoint:SetAngles( Angle )
-			SpawnPoint:Spawn()				
+			SpawnPoint:Spawn()
 		end	
 		return
 	end
 
 	-- The map data doesnt exist. Creating fallbacks.
+	local Spawns = gamemode.SpawnPoints
+
 	for _, info in pairs( Spawns.Fallbacks ) do
 		local Location = info.vec
 		local Angle = info.ang
@@ -213,7 +174,8 @@ function GM:InitPostEntity()
 		SpawnPoint:SetPos( Location )
 		SpawnPoint:SetAngles( Angle )
 		SpawnPoint:Spawn()
-	end	
+		ffa_spawns[_] = SpawnPoint
+	end
 end
 
 --[[
@@ -376,8 +338,8 @@ function GM:PlayerSpawn(ply)
 	if tonumber(ply:GetInfo("df_editspawns")) == 1 then
 		if ply:IsAdmin() or ply:IsSuperAdmin() then
 			ply:Spectate(OBS_MODE_ROAMING)
-			StartEditor(ply)
 			ply.Mode = MODE_ESPAWN
+			StartEditor(ply)
 			ply:ChatPrint("Spawn Editor Enabled, Clearing props and spawning new ones!")
 			return
 		end	
