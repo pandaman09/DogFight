@@ -35,7 +35,7 @@ function ENT:Draw()
 	tdang:RotateAroundAxis( tdang:Forward(), 90 )
 	tdang:RotateAroundAxis( tdang:Right(), 90 )
 
-	local team = team_names[self:GetNWInt("team_name", 0)]
+	local team = team_names[self:GetNWInt("team_id", 0)]
 	if team=="" or team==nil then team="NO STRING!" end
 
 	local pos = self:GetPos()
@@ -77,10 +77,10 @@ end
 function ENT:FullUpdate(pos, ang, delete)
 	local ent = self
 	net.Start("updatespawn")
-		--uid
-		net.WriteInt(ent:GetNWInt("UID", 999 ),32)
-		--spawn_team
-		net.WriteInt(ent:GetNWInt( "team_name", 0 ),16)
+		--server_id
+		net.WriteInt(ent:GetNWInt( "server_id", 0 ),32)
+		--team_id
+		net.WriteInt(ent:GetNWInt( "team_id", 0 ),16)
 		--spawn_pos
 		net.WriteTable({pos.x,pos.y,pos.z})
 		--spawn_angle
@@ -94,6 +94,7 @@ net.Receive("spawnpoint_edit_derma", function(len,ply)
 	local ent = net.ReadEntity()
 	local pos = ent:GetPos()
 	local ang = ent:GetAngles()
+	local oldteam = 0
 	settings = vgui.Create("DFrame")
 	local H = ScrH()
 	local W = ScrW()
@@ -108,7 +109,7 @@ net.Receive("spawnpoint_edit_derma", function(len,ply)
 		ent.ispressed = false
 	end
 	
-	local team_cur = ent:GetNWInt( "team_name", 0 )
+	local team_cur = ent:GetNWInt( "team_id", 0 )
 	team_label = vgui.Create( "DLabel", settings )
 	team_label:SetPos( 50, 35 )
 	team_label:SetText( "Team: "..team_names[team_cur] )
@@ -121,8 +122,7 @@ net.Receive("spawnpoint_edit_derma", function(len,ply)
 	team_select:AddChoice( "FFA" )
 	team_select.OnSelect = function( panel, index, value)
 		if IsValid(ent) then
-			ent:SetNWInt( "team_name", team_nums[value] )
-			team_label:SetText( "Team: "..value )
+			ent:SetNWInt( "team_id", team_nums[value] )
 		end
 	end
 
@@ -186,6 +186,7 @@ net.Receive("spawnpoint_edit_derma", function(len,ply)
 	spawn_update:SetSize( 120, 60 )
 	spawn_update.DoClick = function()
 	    if IsValid(ent) then
+	    	team_label:SetText( "Team: "..ent:GetNWInt( "team_id", 0 ) )
 	    	local new_pos = Vector(world_x_select:GetInt(), world_y_select:GetInt(), world_z_select:GetInt())
 	    	local new_ang = Angle(angle_pitch_select:GetInt(), angle_yaw_select:GetInt(), angle_roll_select:GetInt())
 			ent:FullUpdate(new_pos, new_ang, false)
@@ -233,8 +234,6 @@ net.Receive("spawnpoint_create_derma", function(len,ply)
 	create_team_select:AddChoice( "FFA" )
 	create_team_select.OnSelect = function( panel, index, value)
 		team_number = team_nums[value]
-		create_team_label:SetText( "Team: "..value )
-
 	end
 
 	local world_x_label = vgui.Create( "DLabel", create_spawn )
@@ -296,8 +295,11 @@ net.Receive("spawnpoint_create_derma", function(len,ply)
 	spawn_update:SetText( "Create Point" )
 	spawn_update:SetSize( 120, 60 )
 	spawn_update.DoClick = function()
+		create_team_label:SetText( "Team: "..team_names[team_number] )
 	    net.Start("createspawn")
-			--spawn_team
+			--server_id
+			--net.WriteString(tostring(ent:GetNWInt("server_id", 0 )),32)
+			--team_id
 			net.WriteInt( team_number ,16)
 			--spawn_pos
 			net.WriteTable({create_world_x_select:GetInt(),create_world_y_select:GetInt(),create_world_z_select:GetInt()})

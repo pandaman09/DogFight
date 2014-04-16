@@ -66,6 +66,12 @@ MODE_FLY = 0
 MODE_FILM = 1
 MODE_ESPAWN = 2
 
+team_nums = {
+	["IDC"]=1,
+	["GBU"]=2,
+	["FFA"]=3,
+}
+
 --[[
 	Create spawnpoints
 ]]
@@ -115,49 +121,61 @@ function GM:InitPostEntity()
 	end)
 end
 
-function GM:CheckSpawns(tbl)
+function SpawnsForMode(tbl)
+	for _,info in pairs(tbl) do
+		local team = info.team_id
+		if TEAM_BASED and ((team==1) or (team==2)) then
+			return true
+		end
+		if !TEAM_BASED and (team==3) then
+			return true
+		end
+	end
+	return false
+end
 
+function GM:CheckSpawns(tbl)
 	local spawns = tbl or {}
 	
 	local mapHasSpawns = ( spawns!=nil and spawns[1]!=nil )
-
+	local mapSpawnsForMode = SpawnsForMode(spawns)
 	local fallback = false
 
-	if !mapHasSpawns then
-		Msg("No Spawn points for this map! Go to Settings menu and enable Spawnpoint Editing\n")
+	if !mapHasSpawns or !mapSpawnsForMode then
+		Msg("No Spawn points for this map or mode! Go to Settings menu and enable Spawnpoint Editing\n")
 		fallback = true
 	end
-
+	
 	self:CreateSpawns(fallback, tbl)
 
 end
 
-idc_spawns = idc_spawns or {}
-gbu_spawns = gbu_spawns or {}
-ffa_spawns = ffa_spawns or {}
+game_spawns = game_spawns or {}
 
 function GM:CreateSpawns(fallback, tbl)
 	if !fallback and tbl then
-		table.sort(tbl, function(a,b) return a.skey > b.skey end)
 		for _,info in pairs( tbl ) do
-			local ID = info.skey - (1000*info.team)
+			local server_id = info.server_id
 			local string_pos = string.Explode("_",info.position)
 			local Location = Vector(string_pos[1],string_pos[2],string_pos[3])
 			local string_ang = string.Explode("_",info.angle)
 			local Angle = Angle(string_ang[1],string_ang[2],string_ang[3])
+			local team_id = info.team_id
 			local SpawnPoint
-			if info.team == 1 then
+
+			if team_id == 1 then
 				SpawnPoint = ents.Create( "df_spawn_idc" )
-				idc_spawns[ID] = SpawnPoint
-			elseif info.team == 2 then
+			elseif team_id == 2 then
 				SpawnPoint = ents.Create( "df_spawn_gbu" )
-				gbu_spawns[ID] = SpawnPoint
-			elseif info.team == 3 then
+			elseif team_id == 3 then
 				SpawnPoint = ents.Create( "info_player_start" )
-				ffa_spawns[ID] = SpawnPoint
 			end
+			if !IsValid(SpawnPoint) then MsgN("No Spawn Point! - gamoemode/init.lua:138") return end
+			game_spawns[server_id] = {}
+			game_spawns[server_id]["spawn"] = SpawnPoint
+			game_spawns[server_id]["team"] = team_id
 			SpawnPoint:SetPos( Location )
-			SpawnPoint:SetAngles( Angle )
+			SpawnPoint:KeyValue("Angles", Angle )
 			SpawnPoint:Spawn()
 		end	
 		return
@@ -165,17 +183,25 @@ function GM:CreateSpawns(fallback, tbl)
 
 	-- The map data doesnt exist. Creating fallbacks.
 	local Spawns = gamemode.SpawnPoints
-
-	for _, info in pairs( Spawns.Fallbacks ) do
-		local Location = info.vec
-		local Angle = info.ang
-		print( "SPAWNING FALLBACK POINT info_player_start at [",Location,"]" )
-		local SpawnPoint = ents.Create( "info_player_start" )
-		SpawnPoint:SetPos( Location )
-		SpawnPoint:SetAngles( Angle )
-		SpawnPoint:Spawn()
-		ffa_spawns[_] = SpawnPoint
-	end
+	GetMaxSID( function(max)
+		for server_id, info in pairs( Spawns.Fallbacks ) do
+			local Location = info.vec
+			local Angle = info.ang
+			MsgN( "SPAWNING FALLBACK POINT info_player_start at [",Location,"]" )
+			local SpawnPoint = ents.Create( "info_player_start" )
+			SpawnPoint:SetPos( Location )
+			SpawnPoint:KeyValue("angles", Angle )
+			SpawnPoint:Spawn()
+			if max > server_id then
+				max = max + 1
+				game_spawns[max] = {}
+				game_spawns[max]["spawn"] = SpawnPoint
+			else
+				game_spawns[server_id] = {}
+				game_spawns[server_id]["spawn"] = SpawnPoint
+			end
+		end
+	end)
 end
 
 --[[
@@ -216,15 +242,17 @@ end
 ]]
 function GM:ChooseTeam(ply)
 	if( TEAM_BASED ) then
-		local Team = team.BestAutoJoinTeam( )		
+		local Team = team.BestAutoJoinTeam( )
 		-- If the random team selection fails, we'll have to guess. 
 
-		if( math.abs(team.NumPlayers( 1 ) - team.NumPlayers( 2 ) ) <= 1 ) then return end
-
-		if( not Team or Team == TEAM_UNASSIGNED ) then
+		if ply:Team()==0 then
 			ply:SetTeam( math.random( 1, 2 ) )
 			return
 		end
+		
+		--prevent chaning spawns constantly.
+		if ( math.abs(team.NumPlayers( 1 ) - team.NumPlayers( 2 ) ) <= 1 ) then return end
+
 		ply:SetTeam( Team )
 		return
 	end
@@ -284,7 +312,7 @@ function GM:SelectSpawn(ply)
 	-- Select a team based entity.
 	if( TEAM_BASED ) then
 		
-		if( ply:Team() == T_IDC ) then
+		if( ply:Team() == team_nums["IDC"] ) then
 			SearchEntity = "df_spawn_idc"
 		else 
 			SearchEntity = "df_spawn_gbu" 
@@ -296,14 +324,17 @@ function GM:SelectSpawn(ply)
 			local FallbackPoints = ents.FindByClass( "info_player_start" )
 			local FallbackCount = table.Count(FallbackPoints)
 			if (FallbackCount>0) then
-				return FallbackPoints[math.random( 1, FallbackCount ) ]:GetPos() or Vector( 0, 0, 0 )
+				local spawnpick = FallbackPoints[math.random( 1, FallbackCount ) ]
+				return (spawnpick:GetPos() or Vector( 0, 0, 0 )), (spawnpick:GetAngles() or Angle( 0, 0, 0 ))
 			else
 				return Vector( 0, 0, 0 )
 			end
 		end
-		return SpawnPoints[math.random( 1, SpawnCount ) ]:GetPos() or Vector( 0, 0, 0 )
+		local spawnpick = SpawnPoints[math.random( 1, SpawnCount ) ]
+		return (spawnpick:GetPos() or Vector( 0, 0, 0 )), (spawnpick:GetAngles() or Angle( 0, 0, 0 ))
 	end
-	return ents.FindByClass( SearchEntity )[math.random( 1, #ents.FindByClass( SearchEntity ) )]:GetPos()
+	local spawnpick = ents.FindByClass( SearchEntity )[math.random( 1, #ents.FindByClass( SearchEntity ) )]
+	return (spawnpick:GetPos() or Vector( 0, 0, 0 )), (spawnpick:GetAngles() or Angle( 0, 0, 0 ))
 end
 
 --[[
@@ -346,10 +377,11 @@ function GM:PlayerSpawn(ply)
 		ply:ChatPrint("You are not an admin and cannot use the Spawnpoint Editor")
 	end
 
-	local spawnpoint = self:SelectSpawn(ply)
-	ply:SetPos(spawnpoint)
+	local spawnpos,spawnang = self:SelectSpawn(ply)
+	print(spawnpos,spawnang)
+	ply:SetPos(spawnpos)
 
-	ply:SetAngles(Angle(0,0,0))
+	ply:SetAngles(spawnang)
 	ply:SetModel("models/player/Group03/male_08.mdl")
 
 	if( !IsValid(ply.plane) )then
@@ -357,7 +389,7 @@ function GM:PlayerSpawn(ply)
 	end
 
 	ply.plane:SetPos(ply:GetPos())
-	ply.plane:SetAngles(Angle(0,0,0))
+	ply.plane:SetAngles(ply:GetAngles())
 	ply.plane:Spawn()
 	ply:SetMoveType(MOVETYPE_OBSERVER)
 	ply.plane:AddPilot(ply)

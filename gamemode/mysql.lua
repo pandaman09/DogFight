@@ -50,8 +50,8 @@ function dbquery( query, callback )
 		
 		-- False means error.
 		if( ResultSet == false ) then
-			print("SQLite error: " .. tostring(sql.LastError()) .. "\n")
-			print("SQL of: "..tostring(query).."\n")
+			MsgN("SQLite error: " .. tostring(sql.LastError()) .. "\n")
+			MsgN("SQL of: "..tostring(query).."\n")
 			return
 		end
 
@@ -80,10 +80,10 @@ function dbquery( query, callback )
 	
 	function q:onError( error, sql)
 		if db:status()==mysqloo.DATABASE_NOT_CONNECTED then
-			print("Database is not connected\n")
+			MsgN("Database is not connected\n")
 		end
-		print("SQL error: " .. tostring(error) .. "\n")
-		print("SQL of: "..tostring(sql).."\n")
+		MsgN("SQL error: " .. tostring(error) .. "\n")
+		MsgN("SQL of: "..tostring(sql).."\n")
 	end
 
 	q:start()
@@ -109,9 +109,9 @@ local function CreateSQLiteTables()
 	if( DATABASE_IS_MYSQL ) then return end
 	dbquery( SQLITE_TABLE_CREATE_QUERY, function() end )
 	
-	print( "Does Table 'clients' Exist: ", sql.TableExists( "clients" ) )
-	print( "Does Table 'dogfight' Exist: ", sql.TableExists( "dogfight" ) )
-	print( "Does Table 'mapspanws' Exist: ", sql.TableExists( "mapspawns" ) )
+	MsgN( "Does Table 'clients' Exist: ", sql.TableExists( "clients" ) )
+	MsgN( "Does Table 'dogfight' Exist: ", sql.TableExists( "dogfight" ) )
+	MsgN( "Does Table 'mapspanws' Exist: ", sql.TableExists( "mapspawns" ) )
 end
 hook.Add("Initialize", "SQLiteTableCreation", CreateSQLiteTables )
 concommand.Add( "SQLite_Check", CreateSQLiteTables ) -- For debugging
@@ -129,7 +129,7 @@ if( mysqloo ) then
 	end
 
 	function db:onConnected( )
-		print( "Database Connected!" )
+		MsgN( "Database Connected!" )
 	end
 	db:connect()
 else
@@ -273,10 +273,10 @@ function SaveProfile(ply)
 	-- Save user data
 	-- Make sure we're not overriding valid data because we failed to load it the first time. :<
 	if( ply.ProfileWasLoaded == true ) then
-		print( "Saving player data" )
+		MsgN( "Saving player data" )
 		local timeplayed = tonumber(ply.timeplayed + ply:TimeConnected( ))
 		
-		print( "Timeconnected:", timeplayed )
+		MsgN( "Timeconnected:", timeplayed )
 	
 		local Query = Format( "UPDATE clients SET name = %q, groups = %q, timeplayed = %i WHERE steamid = %q ", name, ply.Flags, math.Round(timeplayed) , steamid )
 		dbquery( Query, function(callback) end)
@@ -339,22 +339,30 @@ function GetSpawns(callback)
 	end
 end
 
-function UpdateSpawns(key, team, pos, ang, delete, callback)
-	if !isnumber(key) or !isnumber(team) or !isvector(pos) or !isangle(ang) then MsgN("Something has gone wrong, will NOT update spawns on SQL") return false end
+function UpdateSpawns(server_id, team, pos, ang, delete, callback)
 	local minus = 0
 	local query = ""
 	local safe_pos = ""..pos.x.."_"..pos.y.."_"..pos.z..""
 	local safe_ang = ""..ang.p.."_"..ang.y.."_"..ang.r..""
 	local map = game.GetMap()
 	if delete then
-		query = "DELETE FROM mapspawns WHERE skey = "..key.." AND map = '"..map.."'"
+		query = "DELETE FROM mapspawns WHERE ctime = "..time.." AND map = '"..map.."'"
 	else
-		query = "INSERT INTO mapspawns (skey, map, team, position, angle) VALUES ("..key..",'"..map.."',"..team..",'"..safe_pos.."','"..safe_ang.."') ON DUPLICATE KEY UPDATE skey ="..key..", team = "..team..", position = '"..safe_pos.."', angle = '"..safe_ang.."'"
+		query = "INSERT INTO mapspawns (server_id, map, team_id, position, angle) VALUES ("..server_id..",'"..map.."',"..team..",'"..safe_pos.."','"..safe_ang.."') ON DUPLICATE KEY UPDATE team_id = "..team..", map = '"..map.."', position = '"..safe_pos.."', angle = '"..safe_ang.."'"
 	end
 	if callback then
-		dbquery( query, callback)
+		dbquery( query, callback )
 	else
 		dbquery( query )
 	end
 end
 
+function GetMaxSID(callback)
+	local query = "SELECT MAX(server_id) FROM mapspawns;"
+	if !callback then MsgN("No callback - gamemode/mysql.lua:367") debug.Trace() end
+	dbquery( query, function(data)
+		local max = data[1]["MAX(server_id)"]
+		if !isnumber(max) then max = 0 end
+		callback(max)
+	end)
+end

@@ -10,34 +10,28 @@ function ENT:Initialize()
 	self:PhysicsInit( SOLID_VPHYSICS )
 	self:SetMoveType( MOVETYPE_VPHYSICS )
 	self:SetSolid( SOLID_VPHYSICS )
-	local phys = self:GetPhysicsObject()
-	if (phys:IsValid()) then	
-		phys:SetMass( 1 )
-		phys:Wake()
-		phys:EnableGravity( false )		
-	end	
 	self:SetRenderMode( RENDERMODE_TRANSALPHA )
 	self:SetColor( Color(255,255,255,200) )
 	self:SetUseType(SIMPLE_USE)
 	
-	self:SetNWInt("UID", 999 ) --fallback info
-	self:SetNWInt("team_name", 0 ) --fallback info
+	self:SetNWInt("server_id", 0 ) --fallback info
+	self:SetNWInt("team_id", 0 ) --fallback info
 end
 
 function ENT:SetTeam(team)
-	self:SetNWInt("team_name", team )
+	self:SetNWInt("team_id", team )
 end
 
 function ENT:GetTeam()
-	return self:GetNWInt("team_name", 0 )
+	return self:GetNWInt("team_id", 0 )
 end
 
-function ENT:SetID(id)
-	self:SetNWInt("UID", id )
+function ENT:SetSID(SID)
+	self:SetNWInt("server_id", SID )
 end
 
-function ENT:GetID()
-	return self:GetNWInt("UID", 999 )
+function ENT:GetSID()
+	return self:GetNWInt("server_id", 0 )
 end
 
 function ENT:Use( a, c )

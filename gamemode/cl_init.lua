@@ -448,7 +448,7 @@ net.Receive("nextspawn", NextSpawn)
 
 function GetFlags(length, client)
 	LocalPlayer().Flags = net.ReadString()
-	print("FLAGS LOADED", LocalPlayer().Flags)
+	MsgN("FLAGS LOADED", LocalPlayer().Flags)
 end
 
 --usermessage.Hook("sendflags", GetFlags)

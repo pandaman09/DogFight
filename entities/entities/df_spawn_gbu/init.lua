@@ -3,8 +3,8 @@ ENT.Base = "base_point"
 ENT.Type = "point"
 
 function ENT:KeyValue(key, val)
-	if key == "angles" then
+	if key == "Angles" then
 		local data = string.Explode(" ", val)
-		self.ANG = Angle(0,tonumber(data[2] or data[1]),0)
+		self.ANG = Angle(data[1],data[2],data[3])
 	end
 end
