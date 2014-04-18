@@ -1,158 +1,165 @@
 
-UNLOCKS = {}
+UNLOCKS = {};
 
-UNLOCK_GROUPS = {}
-UNLOCK_GROUPS[1] = "Colours"
-UNLOCK_GROUPS[2] = "Weapons"
-UNLOCK_GROUPS[3] = "Misc"
-UNLOCK_GROUPS[4] = "Plane"
-UNLOCK_GROUPS[5] = "Donator"
+UNLOCK_GROUPS = {};
+UNLOCK_GROUPS[1] = "Colours";
+UNLOCK_GROUPS[2] = "Weapons";
+UNLOCK_GROUPS[3] = "Misc";
+UNLOCK_GROUPS[4] = "Plane";
+UNLOCK_GROUPS[5] = "Donator";
 
 local function Register(name, TABLE)
 	if UNLOCKS[name] then Error("WARNING UNLOCK REGISTERED TWICE ("..name..")") return end
-	UNLOCKS[name] = TABLE
+	UNLOCKS[name] = TABLE;
 end
 
 if SERVER then
 function Disable_UL(ply,cmd,args)
-	local UL = args[1]
+	local UL = args[1];
 	for k,v in pairs(UNLOCKS) do
 	if v.NAME == UL then
 			for k2,v2 in pairs(ply.UNLOCKS) do
 				if v2.ID == k then
-					v2.EN = 0
+					v2.EN = 0;
 				end
 			end
 		end
 	end
-	ply:SendUnlocks()
-	SaveUnlocks(ply)
+	ply:SendUnlocks();
+	SaveUnlocks(ply);
 end
 
 concommand.Add("disable_ul", Disable_UL)
 
 function Enable_UL(ply,cmd,args)
-	local UL = args[1]
+	local UL = args[1];
 	for k,v in pairs(UNLOCKS) do
 		if v.NAME == UL then
 			for k2,v2 in pairs(ply.UNLOCKS) do
 				if v2.ID == k then
-					v2.EN = 1
+					v2.EN = 1;
 				end
 			end
 		end
 	end
-	ply:SendUnlocks()
-	SaveUnlocks(ply)
+	ply:SendUnlocks();
+	SaveUnlocks(ply);
 end
 
 concommand.Add("enable_ul", Enable_UL)
 end
 
-local Pmeta = FindMetaTable( "Player" )
+local Pmeta = FindMetaTable( "Player" );
 
 function Pmeta:GetUnlocks()
 	if !self.UNLOCKS then self.UNLOCKS = {} return self.UNLOCKS end
 	if self.UNLOCKS then return self.UNLOCKS end
 end
 
-local ALLCOLS = {"COL_RED", "COL_BLUE", "COL_GREEN", "COL_PINK", "COL_ORNG", "COL_BLAK", "COL_WHIT", "COL_YELO"}
+local ALLCOLS = {
+	"COL_RED", 
+	"COL_BLUE", 
+	"COL_GREEN", 
+	"COL_PINK", 
+	"COL_ORNG", 
+	"COL_BLAK", 
+	"COL_WHIT", 
+	"COL_YELO"
+}; local UL = {};
 
-local UL = {}
-
-UL.NAME = "Red Paint Job"
-UL.DESCR = "Paint your tail and wings red!"
-UL.CATEGORY = 1
-UL.COST = 100
-UL.COL = Color(255,0,0,255)
-
-function UL.FUNCTION(plane)
-	plane.wing1:SetColor(255,0,0,255)
-	plane.wing2:SetColor(255,0,0,255)
-	plane.tail1:SetColor(255,0,0,255)
-end
-
-Register("COL_RED", UL)
-
-local UL = {}
-
-UL.NAME = "Blue Paint Job"
-UL.DESCR = "Paint your tail and wings blue!"
-UL.CATEGORY = 1
-UL.COST = 100
-UL.COL = Color(0,0,255,255)
+UL.NAME = "Red Paint Job";
+UL.DESCR = "Paint your tail and wings red!";
+UL.CATEGORY = 1;
+UL.COST = 100;
+UL.COL = Color(255,0,0,255);
 
 function UL.FUNCTION(plane)
-	plane.wing1:SetColor(0,0,255,255)
-	plane.wing2:SetColor(0,0,255,255)
-	plane.tail1:SetColor(0,0,255,255)
+	plane.wing1:SetColor(255,0,0,255);
+	plane.wing2:SetColor(255,0,0,255);
+	plane.tail1:SetColor(255,0,0,255);
 end
 
-Register("COL_BLUE", UL)
+Register("COL_RED", UL);
 
-local UL = {}
+local UL = {};
 
-UL.NAME = "Green Paint Job"
-UL.DESCR = "Paint your tail and wings green!"
-UL.CATEGORY = 1
-UL.COST = 100
-UL.COL = Color(0,255,0,255)
+UL.NAME = "Blue Paint Job";
+UL.DESCR = "Paint your tail and wings blue!";
+UL.CATEGORY = 1;
+UL.COST = 100;
+UL.COL = Color(0,0,255,255);
 
 function UL.FUNCTION(plane)
-	plane.wing1:SetColor(0,255,0,255)
-	plane.wing2:SetColor(0,255,0,255)
-	plane.tail1:SetColor(0,255,0,255)
+	plane.wing1:SetColor(0,0,255,255);
+	plane.wing2:SetColor(0,0,255,255);
+	plane.tail1:SetColor(0,0,255,255);
 end
 
-Register("COL_GREEN", UL)
+Register("COL_BLUE", UL);
 
-local UL = {}
+local UL = {};
 
-UL.NAME = "Dark Green Paint Job"
-UL.DESCR = "Paint your tail and wings dark green!"
-UL.CATEGORY = 1
-UL.COST = 100
-UL.COL = Color(0,150,0,255)
+UL.NAME = "Green Paint Job";
+UL.DESCR = "Paint your tail and wings green!";
+UL.CATEGORY = 1;
+UL.COST = 100;
+UL.COL = Color(0,255,0,255);
 
 function UL.FUNCTION(plane)
-	plane.wing1:SetColor(0,100,0,255)
-	plane.wing2:SetColor(0,100,0,255)
-	plane.tail1:SetColor(0,100,0,255)
+	plane.wing1:SetColor(0,255,0,255);
+	plane.wing2:SetColor(0,255,0,255);
+	plane.tail1:SetColor(0,255,0,255);
 end
 
-Register("COL_D_GREEN", UL)
+Register("COL_GREEN", UL);
 
-local UL = {}
+local UL = {};
 
-UL.NAME = "Pink Paint Job"
-UL.DESCR = "Paint your tail and wings pink!"
-UL.CATEGORY = 1
-UL.COST = 100
-UL.COL = Color(255,105,180,255)
+UL.NAME = "Dark Green Paint Job";
+UL.DESCR = "Paint your tail and wings dark green!";
+UL.CATEGORY = 1;
+UL.COST = 100;
+UL.COL = Color(0,150,0,255);
 
 function UL.FUNCTION(plane)
-	plane.wing1:SetColor(255,105,180,255)
-	plane.wing2:SetColor(255,105,180,255)
-	plane.tail1:SetColor(255,105,180,255)
+	plane.wing1:SetColor(0,100,0,255);
+	plane.wing2:SetColor(0,100,0,255);
+	plane.tail1:SetColor(0,100,0,255);
 end
 
-Register("COL_PINK", UL)
+Register("COL_D_GREEN", UL);
 
-local UL = {}
+local UL = {};
 
-UL.NAME = "Orange Paint Job"
-UL.DESCR = "Paint your tail and wings orange!"
-UL.CATEGORY = 1
-UL.COST = 100
-UL.COL = Color(255,165,0,255)
+UL.NAME = "Pink Paint Job";
+UL.DESCR = "Paint your tail and wings pink!";
+UL.CATEGORY = 1;
+UL.COST = 100;
+UL.COL = Color(255,105,180,255);
 
 function UL.FUNCTION(plane)
-	plane.wing1:SetColor(255,165,0, 255)
-	plane.wing2:SetColor(255,165,0, 255)
-	plane.tail1:SetColor(255,165,0, 255)
+	plane.wing1:SetColor(255,105,180,255);
+	plane.wing2:SetColor(255,105,180,255);
+	plane.tail1:SetColor(255,105,180,255);
 end
 
-Register("COL_ORNG", UL)
+Register("COL_PINK", UL);
+
+local UL = {};
+
+UL.NAME = "Orange Paint Job";
+UL.DESCR = "Paint your tail and wings orange!";
+UL.CATEGORY = 1;
+UL.COST = 100;
+UL.COL = Color(255,165,0,255);
+
+function UL.FUNCTION(plane)
+	plane.wing1:SetColor(255,165,0, 255);
+	plane.wing2:SetColor(255,165,0, 255);
+	plane.tail1:SetColor(255,165,0, 255);
+end
+
+Register("COL_ORNG", UL);
 
 local UL = {}
 

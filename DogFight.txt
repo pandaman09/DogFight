@@ -2,7 +2,7 @@
 {
 	"base"		"base"
 	"title"		"DogFight"
-	"maps"		"^df_"
+	"maps"		"^gm_"
 	"menusystem"	"1"
 	"settings"
 	{
