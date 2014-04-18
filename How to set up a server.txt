@@ -11,7 +11,7 @@ How to create and edit spawns:
 *This document is avaiable on both the github where you downloaded this gamemode and on facepunch on my post here:
 http://facepunch.com/showthread.php?t=1142441&p=44575398&viewfull=1#post44575398
 -Press F1 go to settings/options and enable spawn editor (or type "df_editspawns 1" in console)
--Crash or type kill in console
+-Crash or type kill in console (and respawn as usual by clicking or pressing any key)
 -You will spawn over one of the current spawn points
 -Press E while looking at a current spawn to modify it's properties. The spawn point will ONLY be updated if you click the "Update Point" button. 
 -To spawn a new spawn point type "df_newspawn" in console. A menu will pop-up with editable information. 
