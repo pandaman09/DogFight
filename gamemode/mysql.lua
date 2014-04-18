@@ -20,10 +20,9 @@ local SQLITE_TABLE_CREATE_QUERY = [[
 	);
 
 	CREATE TABLE IF NOT EXISTS mapspawns (
+		server_id int(11) primary key AUTOINCREMENT,
 		map varchar(50),
-		primary_key int(11) primary key,
-		skey int(11)
-		team tinyint(4),
+		team_id tinyint(4),
 		position varchar(50),
 		angle varchar(50)
 	);
