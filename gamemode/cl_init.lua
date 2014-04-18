@@ -211,11 +211,11 @@ function GM:CalcView(ply, origin, angles, fov)
 			if IsValid(ENT) then
 				SPEC.STAGE = nil
 			else
-				if ENT:GetClass() == "player" then
+				if IsValid(ENT) and ENT:GetClass() == "player" then
 					ENT = ENT:GetNWEntity("plane")
 				end
 			end
-			if IsValid(ENT) then
+			if !IsValid(ENT) then
 				local all = ents.FindByClass("plane")
 				if #all == 0 then return end
 				SPEC.ENT = all[math.random(1,#all)]
@@ -448,7 +448,7 @@ net.Receive("nextspawn", NextSpawn)
 
 function GetFlags(length, client)
 	LocalPlayer().Flags = net.ReadString()
-	print("FLAGS LOADED", LocalPlayer().Flags)
+	MsgN("FLAGS LOADED", LocalPlayer().Flags)
 end
 
 --usermessage.Hook("sendflags", GetFlags)
@@ -682,10 +682,11 @@ function GM:HUDPaint()
 	self:UpdateValues()
 	local W = ScrW()
 	local H = ScrH()
-	if SPEC.STAGE && SPEC.STAGE == 3 then
+	local editspawns = (GetConVarNumber( "df_editspawns" )==1)
+	if SPEC.STAGE && SPEC.STAGE == 3 and !editspawns then
 		self:DrawFreezeCamHUD(W,H)
 	end
-	if (SPEC.STAGE && SPEC.STAGE >= 4) || !SPEC.STAGE then
+	if (SPEC.STAGE && SPEC.STAGE >= 4) || !SPEC.STAGE and !editspawns then
 			--self:DoNotifyBox()
 			if IsValid(LocalPlayer().plane) && !SPEC.STAGE then
 				local pos = HUD.PLANE_POS + LocalPlayer().plane:GetForward() * 1000 + LocalPlayer().plane:GetUp() * 20
@@ -799,3 +800,4 @@ end
 function GM:DrawGameHUD(W,H)
 
 end
+
