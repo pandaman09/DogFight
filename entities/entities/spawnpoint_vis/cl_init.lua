@@ -186,7 +186,7 @@ net.Receive("spawnpoint_edit_derma", function(len,ply)
 	spawn_update:SetSize( 120, 60 )
 	spawn_update.DoClick = function()
 	    if IsValid(ent) then
-	    	team_label:SetText( "Team: "..ent:GetNWInt( "team_id", 0 ) )
+	    	team_label:SetText( "Team: "..team_names[ent:GetNWInt( "team_id", 0 )] )
 	    	local new_pos = Vector(world_x_select:GetInt(), world_y_select:GetInt(), world_z_select:GetInt())
 	    	local new_ang = Angle(angle_pitch_select:GetInt(), angle_yaw_select:GetInt(), angle_roll_select:GetInt())
 			ent:FullUpdate(new_pos, new_ang, false)
@@ -296,6 +296,7 @@ net.Receive("spawnpoint_create_derma", function(len,ply)
 	spawn_update:SetSize( 120, 60 )
 	spawn_update.DoClick = function()
 		create_team_label:SetText( "Team: "..team_names[team_number] )
+		if team_number==0 then LocalPlayer():ChatPrint("No team selected! Not creating point.") return end
 	    net.Start("createspawn")
 			--server_id
 			--net.WriteString(tostring(ent:GetNWInt("server_id", 0 )),32)

@@ -287,8 +287,7 @@ function CreateSpawn(server_id, team, pos, ang, table_use)
 	spawn:Spawn()
 	spawn:SetRenderMode( RENDERMODE_TRANSALPHA )
 	spawn:SetColor( Color(255,255,255,200) )
-	print("Spawn:")
-	PrintTable(table_use[server_id])
+	
 	table_use[server_id] = table_use[server_id] or {}
 	table_use[server_id]["spawn"]=spawn
 	table_use[server_id]["team"]=spawn
@@ -304,8 +303,7 @@ function CreateSpawnProp(server_id, team, pos, ang, table_use)
 	spawn:SetSID(server_id)
 	spawn:SetRenderMode( RENDERMODE_TRANSALPHA )
 	spawn:SetColor( Color(255,255,255,200) )
-	print("Prop:")
-	PrintTable(table_use[server_id])
+
 	table_use[server_id] = table_use[server_id] or {}
 	table_use[server_id]["prop"]=spawn
 end

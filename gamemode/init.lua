@@ -175,7 +175,7 @@ function GM:CreateSpawns(fallback, tbl)
 			game_spawns[server_id]["spawn"] = SpawnPoint
 			game_spawns[server_id]["team"] = team_id
 			SpawnPoint:SetPos( Location )
-			SpawnPoint:KeyValue("Angles", Angle )
+			--SpawnPoint:KeyValue("Angles", Angle )
 			SpawnPoint:Spawn()
 		end	
 		return
@@ -190,7 +190,7 @@ function GM:CreateSpawns(fallback, tbl)
 			MsgN( "SPAWNING FALLBACK POINT info_player_start at [",Location,"]" )
 			local SpawnPoint = ents.Create( "info_player_start" )
 			SpawnPoint:SetPos( Location )
-			SpawnPoint:KeyValue("angles", Angle )
+			--SpawnPoint:KeyValue("angles", Angle )
 			SpawnPoint:Spawn()
 			if max > server_id then
 				max = max + 1
@@ -378,7 +378,7 @@ function GM:PlayerSpawn(ply)
 	end
 
 	local spawnpos,spawnang = self:SelectSpawn(ply)
-	print(spawnpos,spawnang)
+
 	ply:SetPos(spawnpos)
 
 	ply:SetAngles(spawnang)
