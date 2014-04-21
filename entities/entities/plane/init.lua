@@ -278,11 +278,6 @@ function ENT:Shake(dur, amp, cont)
 end
 
 function ENT:SendValues()
-	--umsg.Start("up", self.ply)
-	--umsg.Short(self.speed)
-	--umsg.Short(self.gun.Ammo)
-	--umsg.End()
-
 	net.Start("up")
 		net.WriteInt(self.speed, 16)
 		net.WriteInt(self.gun.Ammo, 16)

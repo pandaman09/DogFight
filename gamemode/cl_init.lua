@@ -101,8 +101,6 @@ function Plinfo(length, client)
 	HUD.AMMO_T = net.ReadInt(16)
 end
 
---usermessage.Hook("up", Plinfo)
-
 net.Receive("up", Plinfo)
 
 function GM:Think()
@@ -293,8 +291,6 @@ function StartSpec(length, client)
 	SPEC.CUR   = CurTime()
 end
 
---usermessage.Hook("spec", StartSpec)
-
 net.Receive("spec", StartSpec)
 
 function EndSpec(length, client)
@@ -303,8 +299,6 @@ function EndSpec(length, client)
 	SPEC.POS = Vector(0,0,0)
 	SPEC.CUR = CurTime()
 end
-
---usermessage.Hook("stop_spec", EndSpec)
 
 net.Receive("stop_spec", EndSpec)
 
@@ -317,45 +311,8 @@ function StartNormalSpec(length, client)
 	SPEC.CUR   = CurTime()
 end
 
---usermessage.Hook("norm_spec", StartNormalSpec)
-
 net.Receive("norm_spec", StartNormalSpec)
 
---[[
-local CHAT_OPEN = false
-local CHAT_TEXT = ""
-
-function GM:ChatTextChanged(txt)
-	if string.len(txt) <= 70 then
-		CHAT_TEXT = txt
-	end
-end
-
-function GM:StartChat()
-	CHAT_OPEN = true
-	return true
-end
-
-function GM:FinishChat()
-	CHAT_OPEN = false
-	return true
-end
-
-
-function GM:ChatText(id, name, text, type)
-	local add = text
-	local chat = false
-	if name != "Console" then
-		add = name..": "..text
-		chat = true
-		if GetConVarNumber("df_chatbeep") == 1 && name != LocalPlayer():Nick() then
-			surface.PlaySound("buttons/blip1.wav")
-		end
-	end
-	print("[CHAT] "..add)
-	AddMessage(nil, add, chat)
-end
-]]--
 function GM:OnSpawnMenuClose( )
 	RunConsoleCommand("-roll_l")
 end
@@ -364,60 +321,15 @@ function GM:OnSpawnMenuOpen( )
 	RunConsoleCommand("+roll_l")
 end
 
-MSGS = {}
-
-local LastFlash = CurTime()
-local Dmg_red = true
-
-function AddMessage(um, ovrde, chat)
+function AddMessage(length, client)
 	local W = ScrW()
 	local H = ScrH()
 	local txt = ""
-	if !um then
-		txt = ovrde
-	else
-		txt = net.ReadString()
-		chat = net.ReadBit()
-	end
+	txt = net.ReadString()
+
 	LocalPlayer():ChatPrint(txt)
 	return
 end
---[[
-	local col = Color(255,255,255,255)
-	if !chat then
-		col = Color(255,50,50,255)
-	end
-	surface.SetFont("message")
-	if surface.GetTextSize( txt ) >= W * 0.26 then
-		local txt1 = string.sub(txt,1,37)
-		local txt2 = string.sub(txt,38,85)
-		local t = {}
-		t.txt = txt1
-		t.cur = CurTime()
-		t.alp = 255
-		t.col = col
-		table.insert(MSGS,1, t)
-		local t = {}
-		t.txt = txt2
-		t.cur = CurTime()
-		t.alp = 255
-		t.col = col
-		table.insert(MSGS,1, t)
-	else
-		local t = {}
-		t.txt = txt
-		t.cur = CurTime()
-		t.alp = 255
-		t.col = col
-		table.insert(MSGS,1, t)
-	end
-	if #MSGS >= 30 then
-		table.remove(MSGS, #MSGS)
-	end
-end
-]]--
-
---usermessage.Hook("message", AddMessage)
 
 net.Receive("message", AddMessage)
 
@@ -425,16 +337,11 @@ function Help()
 	vgui.Create("df_menu")
 end
 
---usermessage.Hook("help", Help)
-
 net.Receive("help", Help)
 
 function Ammo(length, client)
-	local ammo = net.ReadInt(32)
-	PLANE.MAX_AMMO = ammo
+	PLANE.MAX_AMMO = net.ReadInt(32)
 end
-
---usermessage.Hook("update_ammo", Ammo)
 
 net.Receive("update_ammo", Ammo)
 
@@ -442,16 +349,12 @@ function NextSpawn(length, client)
 	LocalPlayer().NextSpawn = net.ReadInt(32)
 end
 
---usermessage.Hook("nextspawn", NextSpawn)
-
 net.Receive("nextspawn", NextSpawn)
 
 function GetFlags(length, client)
 	LocalPlayer().Flags = net.ReadString()
-	MsgN("FLAGS LOADED", LocalPlayer().Flags)
+	--MsgN("FLAGS LOADED", LocalPlayer().Flags)
 end
-
---usermessage.Hook("sendflags", GetFlags)
 
 net.Receive("sendflags", GetFlags)
 
@@ -522,6 +425,9 @@ function GM:DrawFreezeCamHUD(W,H)
 	name = string.upper(name)
 	draw.SimpleText( "YOU WERE KILLED BY "..name, "TID", W / 2, H * 0.75, Color(255,50,50,255), 1,1)
 end
+
+local LastFlash = CurTime()
+local Dmg_red = true
 
 function GM:DrawPlaneHUD(W,H)
 	--DAMAGE BAR
@@ -716,7 +622,7 @@ function KillMessage(length, client)
 	local tem = net.ReadInt(16)
 	local txt = net.ReadString()
 	local ico = net.ReadString()
-	print(txt)
+	--print(txt)
 	local t = {}
 	t.cur = CurTime()
 	t.txt = txt
@@ -731,8 +637,6 @@ function KillMessage(length, client)
 	end
 	table.insert(K_MSG, 1, t)
 end
-
---usermessage.Hook("killmsg", KillMessage)
 
 net.Receive("killmsg", KillMessage)
 
@@ -757,7 +661,9 @@ end
 
 local M_MSG = {}
 
-function MoneyMessage(txt, col)
+function MoneyMessage(length, client)
+	local txt = net.ReadString()
+	local col = net.ReadString()
 	col = string.Explode(" ", col)
 	local t = {}
 	t.txt = txt
@@ -767,13 +673,7 @@ function MoneyMessage(txt, col)
 	table.insert(M_MSG, 1, t)
 end
 
---usermessage.Hook("monmsg", MoneyMessage)
-
-net.Receive("monmsg", function() 
-	local txt = net.ReadString()
-	local col = net.ReadString()
-	MoneyMessage(txt,col)
-end)
+net.Receive("monmsg", MoneyMessage)
 
 function GM:DrawMoney()
 	local W = ScrW()

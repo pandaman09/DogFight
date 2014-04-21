@@ -11,37 +11,6 @@ include( "mysql.lua" )
 include( "commands.lua" )
 
 --[[
-	List of net messages used in the gamemode.
-]]
-util.AddNetworkString( "up" ) -- cl_init.lua line ~104
-util.AddNetworkString( "spec" ) -- cl_init.lua line ~289
-util.AddNetworkString( "stop_spec" ) -- cl_init.lua line ~300
-util.AddNetworkString( "norm_spec" ) -- cl_init.lua line ~313
-util.AddNetworkString( "message" ) -- cl_init.lua line ~413
-util.AddNetworkString( "help" ) -- cl_init.lua line ~421
-util.AddNetworkString( "update_ammo" ) -- cl_init.lua line ~430
-util.AddNetworkString( "nextspawn" ) -- cl_init.lua line ~438
-util.AddNetworkString( "sendflags" ) -- cl_init.lua line ~447
-util.AddNetworkString( "killmsg" ) -- cl_init.lua line ~727
-util.AddNetworkString( "monmsg" ) -- cl_init.lua line ~764
-
-util.AddNetworkString( "ul_start" ) -- cl_panels.lua line ~363
-util.AddNetworkString( "ul_end" ) -- cl_panels.lua line ~374
-util.AddNetworkString( "ul_chunk" ) -- cl_panels.lua line ~386
-util.AddNetworkString( "stats" ) -- cl_panels.lua line ~395
-util.AddNetworkString( "sendmaps" ) -- cl_panels.lua line ~600
-util.AddNetworkString( "mapvote" ) -- cl_panels.lua line ~611
-util.AddNetworkString( "team" ) -- cl_panels.lua line ~839
-
-util.AddNetworkString( "send_ul" ) -- player_extension.lua line ~59
-util.AddNetworkString( "send_ul" ) -- unlocks.lua
-
-util.AddNetworkString( "updatespawn" ) -- used for modifying or deleting spawnpoints - Client to Server
-util.AddNetworkString( "spawnpoint_edit_derma" ) -- used for modifying or deleting spawnpoints - Client to Server
-util.AddNetworkString( "createspawn" ) -- used for creating spawnpoints - Client to Server
-util.AddNetworkString( "spawnpoint_create_derma" ) -- used for creating spawnpoints - Client to Server
-
---[[
 	Resource Table
 ]]
 local ResourceLocations = {

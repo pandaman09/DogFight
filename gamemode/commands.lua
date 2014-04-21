@@ -25,13 +25,6 @@ concommand.Add("df_radio_play_all", radio_play)
 local mapvotes = {}
 
 function SendMaps(ply,cmd,args)
-	--umsg.Start( "sendmaps", ply )
-	--	umsg.Short( #read )
-	--	for k,v in pairs( read ) do
-	--		umsg.String( v )
-	--	end
-	--umsg.End( )
-
 	net.Start("sendmaps")
 		net.WriteInt( #read, 16 )
 		for k,v in pairs(read) do
@@ -69,16 +62,11 @@ function GM:StartMapVote()
 	for k,v in pairs(read) do
 		mapvotes[v] = 0
 	end
-	--for k,v in pairs(player.GetAll()) do
-		--umsg.Start("mapvote", v)
-		--umsg.End()
-	--end
 
 	net.Start("mapvote")
-	net.Send(player.GetAll()) -- more efficient?
+	net.Send(player.GetAll())
 
-	--timer.Simple(15, GAMEMODE.EndMapVote, GAMEMODE)
-	timer.Simple(15, function() GAMEMODE.EndMapVote() end)
+	timer.Simple(15, function() GAMEMODE:EndMapVote() end)
 end
 
 function GM:EndMapVote()
@@ -98,8 +86,7 @@ function GM:EndMapVote()
 	else
 		for k,v in pairs(player.GetAll()) do
 			v:ChatPrint(winner.." has won the map vote!")
-			--timer.Simple(5, GAMEMODE.ChangeMap, GAMEMODE, string.sub(winner,1, -5 ))
-			timer.Simple(5, function() GAMEMODE.ChangeMap(string.sub(winner,1, -5)) end)
+			timer.Simple(5, function() GAMEMODE:ChangeMap(string.sub(winner,1, -5)) end)
 			for k,v in pairs(player.GetAll()) do
 				SaveProfile(v)
 			end
@@ -374,7 +361,6 @@ net.Receive("createspawn", function(len, ply)
 		next_id = server_id + 1
 		UpdateEditorSpawns( next_id, team, pos, ang, false )
 	end)
-
 end)
 
 function NewSpawnPoint(ply, cmd, args)
