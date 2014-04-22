@@ -381,7 +381,7 @@ function GM:PlayerSpawn(ply)
 
 	ply:SetPos(spawnpos)
 
-	ply:SetAngles(spawnang)
+	ply:SetAngles(Angle(0,0,0))
 	ply:SetModel("models/player/Group03/male_08.mdl")
 
 	if( !IsValid(ply.plane) )then
