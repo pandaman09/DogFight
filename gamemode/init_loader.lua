@@ -6,3 +6,11 @@
 
 --precache net strings
 include( "net_precache.lua" )
+
+--settings
+--DO NOT ADD CLIENT SIDED THE FILE CONTAINS SENSATIVE INFORMATION!
+include( "settings.lua" )
+
+--system loading
+include( "system_loader.lua" )
+AddCSLuaFile( "system_loader.lua" )
