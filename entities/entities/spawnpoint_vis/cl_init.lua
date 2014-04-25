@@ -13,13 +13,13 @@ surface.CreateFont ("CV20", {
 
 ENT.RenderGroup = RENDERGROUP_TRANSLUCENT
 
-team_names = {
+local team_names = {
 	[0]="FALLBACK",
 	[1]="IDC",
 	[2]="GBU",
 	[3]="FFA",
 }
-team_nums = {
+local team_nums = {
 	["IDC"]=1,
 	["GBU"]=2,
 	["FFA"]=3,

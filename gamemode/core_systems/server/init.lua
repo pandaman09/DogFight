@@ -1,54 +1,14 @@
-AddCSLuaFile( "cl_init.lua" )
-AddCSLuaFile( "cl_panels.lua" )
-AddCSLuaFile( "shared.lua" )
-AddCSLuaFile( "cl_scoreboard.lua" )
-AddCSLuaFile( "unlocks.lua")
-
-
-include( "player_extension.lua" )
-include( "shared.lua" )
-include( "mysql.lua" )
-include( "commands.lua" )
+--[[
+	init globals
+]]
+GAME_SPAWNS = GAME_SPAWNS or {}
 
 --[[
-	Resource Table
+	init locals
 ]]
-local ResourceLocations = {
-	"materials/modulus/particles/",
-	"materials/DFHUD/crosshair.vtf",
-	"materials/bennyg/cannon_1/",
-	"materials/models/airboat/",
-	"models/Bennyg/Cannons/",
-	"materials/bennyg/radar/",
-	"models/Bennyg/Radar/",
-	"models/Bennyg/plane/",
-	"sound/df/"
-}
-
---[[
-	Player mode Enums
-	MODE_FLY is for normal play
-	MODE_FILM is for df_film
-	MODE_ESPAWN is for spawn editor
-]]
-MODE_FLY = 0
-MODE_FILM = 1
-MODE_ESPAWN = 2
-
-team_nums = {
-	["IDC"]=1,
-	["GBU"]=2,
-	["FFA"]=3,
-}
-
---[[
-	Create spawnpoints
-]]
-gamemode.SpawnPoints = {}		
-gamemode.SpawnPoints.maps = {}
-
--- Incase we couldn't get custom map spawns.
-gamemode.SpawnPoints.Fallbacks = {
+local gamemode.SpawnPoints = {}
+local gamemode.SpawnPoints.maps = {}
+local gamemode.SpawnPoints.Fallbacks = { -- Incase we couldn't get custom map spawns.
 	[1]={
 		["vec"]=Vector(-108, -100, 2000),
 		["ang"]=Angle(0,0,0)
@@ -62,7 +22,36 @@ gamemode.SpawnPoints.Fallbacks = {
 		["ang"]=Angle(0,0,0)
 	}
 }
+--[[
+	Player mode Enums
+	mode_fly is for normal play
+	mode_film is for df_film
+	mode_espawn is for spawn editor
+]]
+local mode_fly = 0
+local mode_film = 1
+local mode_espawn = 2
 
+local team_nums = {
+	["IDC"]=1,
+	["GBU"]=2,
+	["FFA"]=3,
+}
+
+--[[
+	Resource Table
+]]
+local ResourceLocations = {
+	"materials/modulus/particles/",
+	"materials/DFHUD/crosshair.vtf",
+	"materials/bennyg/cannon_1/",
+	"materials/models/airboat/",
+	"models/Bennyg/Cannons/",
+	"materials/bennyg/radar/",
+	"models/Bennyg/Radar/",
+	"models/Bennyg/plane/"
+	--"sound/df/" -- no sounds :(
+}
 --[[
 	Desc: Load all the needed resources using ResourceLocations
 ]]
@@ -77,9 +66,13 @@ for key, dir in pairs( ResourceLocations ) do
 	end
 end
 
+-- Spawn Point Functions
+--[[
+	Spawn point Creation
+]]
 --[[
 	Remove spawn points and use the new spawn system.
-]]						
+]]	
 function GM:InitPostEntity()
 	for _,v in pairs( ents.FindByClass( "info_player_start" )) do
 		v:Remove();
@@ -89,8 +82,7 @@ function GM:InitPostEntity()
 		self:CheckSpawns(data)
 	end)
 end
-
-function SpawnsForMode(tbl)
+local function SpawnsForMode(tbl)
 	for _,info in pairs(tbl) do
 		local team = info.team_id
 		if TEAM_BASED and ((team==1) or (team==2)) then
@@ -102,7 +94,6 @@ function SpawnsForMode(tbl)
 	end
 	return false
 end
-
 function GM:CheckSpawns(tbl)
 	local spawns = tbl or {}
 	
@@ -118,9 +109,6 @@ function GM:CheckSpawns(tbl)
 	self:CreateSpawns(fallback, tbl)
 
 end
-
-game_spawns = game_spawns or {}
-
 function GM:CreateSpawns(fallback, tbl)
 	if !fallback and tbl then
 		for _,info in pairs( tbl ) do
@@ -140,16 +128,16 @@ function GM:CreateSpawns(fallback, tbl)
 				SpawnPoint = ents.Create( "info_player_start" )
 			end
 			if !IsValid(SpawnPoint) then MsgN("No Spawn Point! - gamoemode/init.lua:138") return end
-			game_spawns[server_id] = {}
-			game_spawns[server_id]["spawn"] = SpawnPoint
-			game_spawns[server_id]["team"] = team_id
+			GAME_SPAWNS[server_id] = {}
+			GAME_SPAWNS[server_id]["spawn"] = SpawnPoint
+			GAME_SPAWNS[server_id]["team"] = team_id
 			SpawnPoint:SetPos( Location )
 			--SpawnPoint:KeyValue("Angles", Angle )
 			SpawnPoint:Spawn()
 		end	
 		return
 	end
-
+	
 	-- The map data doesnt exist. Creating fallbacks.
 	local Spawns = gamemode.SpawnPoints
 	GetMaxSID( function(max)
@@ -163,47 +151,18 @@ function GM:CreateSpawns(fallback, tbl)
 			SpawnPoint:Spawn()
 			if max > server_id then
 				max = max + 1
-				game_spawns[max] = {}
-				game_spawns[max]["spawn"] = SpawnPoint
+				GAME_SPAWNS[max] = {}
+				GAME_SPAWNS[max]["spawn"] = SpawnPoint
 			else
-				game_spawns[server_id] = {}
-				game_spawns[server_id]["spawn"] = SpawnPoint
+				GAME_SPAWNS[server_id] = {}
+				GAME_SPAWNS[server_id]["spawn"] = SpawnPoint
 			end
 		end
 	end)
 end
 
---[[
-	Func: GM:MessageAll
-	Desc: Message everyone on the server 
-	Args: string Text, UNKNOW?
-]]
-function GM:MessageAll(txt, chat)
-	for k,v in pairs(player.GetAll()) do
-		v:ChatPrint(txt)
-	end
-end
 
---[[
-	Func: GM:ShowHelp
-	Desc: Display the options menu to the player. (F1)
-	Params: player ply
-]]
-function GM:ShowHelp(ply)
-	net.Start("help")
-	net.Send(ply)
-end
-
---[[
-	Func: GM:ShowTeam
-	Desc: Display the team menu to the player (F2)
-	Params: player ply
-]]
-function GM:ShowTeam(ply)
-	net.Start("team")
-	net.Send(ply)
-end
-
+-- Player Spawning
 --[[
 	Func: GM:ChooseTeam
 	Desc: Decide what team to put the player in.
@@ -219,7 +178,7 @@ function GM:ChooseTeam(ply)
 			return
 		end
 		
-		--prevent chaning spawns constantly.
+		--balance teams
 		if ( math.abs(team.NumPlayers( 1 ) - team.NumPlayers( 2 ) ) <= 1 ) then return end
 
 		ply:SetTeam( Team )
@@ -228,19 +187,6 @@ function GM:ChooseTeam(ply)
 	-- Free for all, add them to the same team.
 	ply:SetTeam( 1 )
 end
-
---[[
-	Func: GM:CanPlayerSuicide
-	Desc: Allow the player to suicide if they're not moving( Landed ) or in film mode.
-	Params: player ply
-]]
-function GM:CanPlayerSuicide ( ply )
-	if( IsValid(ply.plane) and ply.plane:GetVelocity():Length() <= 100 ) then return true end
-	if( tonumber(ply:GetInfo("df_film")) == 1 or IsValid(ply.plane) ) then return true end
-	if( tonumber(ply:GetInfo("df_editspawns")) == 1 or IsValid(ply.plane) ) then return true end
-	return false
-end
-
 --[[
 	Func: GM:PlayerInitialSpawn
 	Desc: Set the player up.
@@ -255,18 +201,17 @@ function GM:PlayerInitialSpawn(ply)
 
 	ply:GetOptions()
 
-	-- What is the point? A simple anti-ESP? i'll leave it here anyway...
-	ply:SendLua([[
-	local oh = hook.Add
+	-- Going to disable this because it's unneeded. Detouring is annoying and the server owners should worry about hackers not us.
+	--ply:SendLua([[
+	--local oh = hook.Add
 
-	function hook.Add(h,n,f)
-		if n == "HUD" && h == "HUDShouldDraw" then oh(h,n,f) return end
-		if n == "READY" && h == "Think" then oh(h,n,f) return end
-		return
-	end
-	]])
+	--function hook.Add(h,n,f)
+	--	if n == "HUD" && h == "HUDShouldDraw" then oh(h,n,f) return end
+	--	if n == "READY" && h == "Think" then oh(h,n,f) return end
+	--	return
+	--end
+	--]])
 end
-
 --[[
 	Func: PlayerSelectSpawn
 	Desc: Select a spawn point depending on gametype
@@ -305,15 +250,15 @@ function GM:SelectSpawn(ply)
 	local spawnpick = ents.FindByClass( SearchEntity )[math.random( 1, #ents.FindByClass( SearchEntity ) )]
 	return (spawnpick:GetPos() or Vector( 0, 0, 0 )), (spawnpick:GetAngles() or Angle( 0, 0, 0 ))
 end
-
 --[[
-	Func: GM:BalanceTeams
-	Desc: Balance the teams to make them even as possible. 
-	NOTE: Only called if in a team based game.
+	Func: GM:ModifySpawnTime
+	Desc: Allow the use of custom spawn times.
+	Params: player ply, player killer, number time
+	Note: pointless...
 ]]
-function GM:BalancePlayer( ply )
+function GM:ModifySpawnTime(ply, killer, time )
+	return time
 end
-
 --[[
 	Func: PlayerSpawn
 	Desc: Create the player, set their position and create their plane. Removed server query spam for failed profile loads.
@@ -331,14 +276,14 @@ function GM:PlayerSpawn(ply)
 
 	if tonumber(ply:GetInfo("df_film")) == 1 then
 		ply:Spectate(OBS_MODE_ROAMING)
-		ply.Mode = MODE_FILM
+		ply.Mode = mode_film
 		return
 	end
 
 	if tonumber(ply:GetInfo("df_editspawns")) == 1 then
 		if ply:IsAdmin() or ply:IsSuperAdmin() then
 			ply:Spectate(OBS_MODE_ROAMING)
-			ply.Mode = MODE_ESPAWN
+			ply.Mode = mode_espawn
 			StartEditor(ply)
 			ply:ChatPrint("Spawn Editor Enabled, Clearing props and spawning new ones!")
 			return
@@ -364,13 +309,70 @@ function GM:PlayerSpawn(ply)
 	ply.plane:AddPilot(ply)
 	ply:SetNWEntity("plane", ply.plane)	
 
-	ply.Mode = MODE_FLY
+	ply.Mode = mode_fly
 end
 hook.Add( "MYSQL.PlayerLoaded", "InitializePlayer", function(ply) ply:Spawn() end )
 
-function GM:DoPlayerDeath()
+
+-- Client Helper Functions
+--[[
+	Func: GM:ShowHelp
+	Desc: Display the options menu to the player. (F1)
+	Params: player ply
+]]
+function GM:ShowHelp(ply)
+	net.Start("help")
+	net.Send(ply)
+end
+--[[
+	Func: GM:ShowTeam
+	Desc: Display the team menu to the player (F2)
+	Params: player ply
+]]
+function GM:ShowTeam(ply)
+	net.Start("team")
+	net.Send(ply)
+end
+--[[
+	Func: GM:CanPlayerSuicide
+	Desc: Allow the player to suicide if they're not moving( Landed ) or in film mode.
+	Params: player ply
+]]
+function GM:CanPlayerSuicide ( ply )
+	if( IsValid(ply.plane) and ply.plane:GetVelocity():Length() <= 100 ) then return true end
+	if( tonumber(ply:GetInfo("df_film")) == 1 or IsValid(ply.plane) ) then return true end
+	if( tonumber(ply:GetInfo("df_editspawns")) == 1 or IsValid(ply.plane) ) then return true end
+	return false
+end
+--[[
+	Func: GM:KillMessage
+	Desc: Send player messages
+	Params: player ply, string txt, number typ, string ico
+]]
+function GM:KillMessage(ply, txt, typ, ico)
+	ico = ico or "suicide"
+	net.Start("killmsg")
+		net.WriteInt(typ, 16)
+		net.WriteInt(ply:Team(), 16)
+		net.WriteString(txt)
+	net.Broadcast()
 end
 
+
+--Utility Functions
+--[[
+	Func: GM:MessageAll
+	Desc: Message everyone on the server 
+	Args: string Text, UNKNOW?
+]]
+function GM:MessageAll(txt, chat)
+	for k,v in pairs(player.GetAll()) do
+		v:ChatPrint(txt)
+	end
+end
+
+
+--Player Death Functions
 function GM:PlayerDeath( ply, pln, pln2)
 	
 	-- Check if we're in a team based game.
@@ -435,30 +437,6 @@ function GM:PlayerDeath( ply, pln, pln2)
 	end
 	
 end
-
---[[
-	Func: GM:KillMessage
-	Desc: Send player messages
-	Params: player ply, string txt, number typ, string ico
-]]
-function GM:KillMessage(ply, txt, typ, ico)
-	ico = ico or "suicide"
-	net.Start("killmsg")
-		net.WriteInt(typ, 16)
-		net.WriteInt(ply:Team(), 16)
-		net.WriteString(txt)
-	net.Broadcast()
-end
-
---[[
-	Func: GM:ModifySpawnTime
-	Desc: Allow the use of custom spawn times.
-	Params: player ply, player killer, number time
-]]
-function GM:ModifySpawnTime(ply,killer, time )
-	return time
-end
-
 --[[
 	Func: GM:CalcDamageMoney
 	Desc: Manage the players money.
@@ -483,46 +461,6 @@ function GM:CalcDamageMoney(killer, ply)
 		end
 	end
 end
-
---[[
-	Func: GM:ScalePlaneDamage
-	Desc: Determine damage scale for unlock && other bonuses. 
-]]
-function GM:ScalePlaneDamage(plane,dmg)
-	return dmg
-end
-
---[[
-	Func: GM:PlayerShouldTakeDamage
-	Desc: Make sure the player cannot be killed.
-	Params: player ply
-]]
-function GM:PlayerShouldTakeDamage(ply)
-	return false
-end
-
---[[
-	Func: GM:EntityTakeDamage
-	Desc: Simulate damage on the plane.
-	Params: entity entity, CTakeDamageInfo dmginfo
-]]
-function GM:EntityTakeDamage( entity, dmginfo )
-	
-	local DamageAmount = dmginfo:GetDamage( )
-	local DamageInflictor = dmginfo:GetInflictor( )
-
-	-- Check if our winds are being shot at. :D
-	if entity:GetModel() == "models/props_junk/wood_pallet001a.mdl" then
-		if( IsValid(entity.plane) and ( DamageInflictor:GetClass() == "plane_gun" or DamageInflictor:GetClass() == "df_flak") )  then
-			entity.plane:TakeDamage( DamageAmount, DamageInflictor, DamageInflictor)
-			if entity:Health() <= 10 then entity.plane:SetKiller(DamageInflictor.plane.ply, 1) end
-			return true
-		end
-	end
-	return false
-end
-
-
 --[[
 	Func: GM:PlayerDeathThink
 	Desc: Respawn player if they press a button or if they exit df_film mode
@@ -538,9 +476,48 @@ function GM:PlayerDeathThink(ply)
 		ply.respawnNow = false
 		ply:Spawn()
 	end
-
 end
 
+
+--Plane Functions
+--[[
+	Func: GM:ScalePlaneDamage
+	Desc: Determine damage scale for unlock && other bonuses. 
+	Note: useless
+]]
+function GM:ScalePlaneDamage(plane,dmg)
+	return dmg
+end
+--[[
+	Func: GM:PlayerShouldTakeDamage
+	Desc: Make sure the player cannot be killed.
+	Params: player ply
+]]
+function GM:PlayerShouldTakeDamage(ply)
+	return false
+end
+--[[
+	Func: GM:EntityTakeDamage
+	Desc: Simulate damage on the plane.
+	Params: entity entity, CTakeDamageInfo dmginfo
+]]
+function GM:EntityTakeDamage( entity, dmginfo )
+	local DamageAmount = dmginfo:GetDamage( )
+	local DamageInflictor = dmginfo:GetInflictor( )
+
+	-- Check if our winds are being shot at. :D
+	if entity:GetModel() == "models/props_junk/wood_pallet001a.mdl" then
+		if( IsValid(entity.plane) and ( DamageInflictor:GetClass() == "plane_gun" or DamageInflictor:GetClass() == "df_flak") )  then
+			entity.plane:TakeDamage( DamageAmount, DamageInflictor, DamageInflictor)
+			if entity:Health() <= 10 then entity.plane:SetKiller(DamageInflictor.plane.ply, 1) end
+			return true
+		end
+	end
+	return false
+end
+
+
+--Player Disconnect Functions
 --[[
 	Func: GM:PlayerDisconnected
 	Desc: Remove the players plane, if it exists. Check to see if the player was editing.
@@ -562,35 +539,12 @@ function SpectateOff(ply)
 	ply:Spawn()
 end
 
-function SpawnEditorOff(ply)
-	if !IsValid(ply) then return end
-	ply:KillSilent( )
-	ply:SendNextSpawn(CurTime()+1)
-	ply:SetObserverMode(OBS_MODE_CHASE)
-	ply:SetMoveType(MOVETYPE_OBSERVER)
-	ply:Spawn()
-	CheckEditorStatus(ply)
-end
-
+--spawn editor stuff and death
 function GM:KeyPress(ply, key)
-	if IsValid(ply) and !ply:Alive() and ply.Mode==MODE_FLY then
+	if IsValid(ply) and !ply:Alive() and ply.Mode==mode_fly then
 		ply.respawnNow = true
 	end
-	if ply.Mode==MODE_FILM and tonumber(ply:GetInfo("df_film")) == 0 then
+	if ply.Mode==mode_film and tonumber(ply:GetInfo("df_film")) == 0 then
 		SpectateOff(ply)
-	end
-	if ply.Mode==MODE_ESPAWN and tonumber(ply:GetInfo("df_editspawns")) == 0 then
-		SpawnEditorOff(ply)
-	end
-end
-
-function CheckEditorStatus(ply)
-	for k,v in pairs(spawnEditors) do 
-		if v == ply:SteamID() then
-			table.remove(spawnEditors,key)
-		end
-	end
-	if not (table.Count(spawnEditors)>0) then
-		ClearEditorSpawns()
 	end
 end

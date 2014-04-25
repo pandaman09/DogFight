@@ -586,7 +586,6 @@ end
 
 function GM:HUDPaint()
 	self:UpdateValues()
-	local W = ScrW()
 	local H = ScrH()
 	local editspawns = (GetConVarNumber( "df_editspawns" )==1)
 	if SPEC.STAGE && SPEC.STAGE == 3 and !editspawns then

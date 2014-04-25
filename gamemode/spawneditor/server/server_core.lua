@@ -1,30 +1,30 @@
 --[[
 	Player mode Enums
-	MODE_FLY is for normal play
-	MODE_FILM is for df_film
-	MODE_ESPAWN is for spawn editor
+	mode_fly is for normal play
+	mode_film is for df_film
+	mode_espawn is for spawn editor
 ]]
-MODE_FLY = 0
-MODE_FILM = 1
-MODE_ESPAWN = 2
+local mode_fly = 0
+local mode_film = 1
+local mode_espawn = 2
 
 --[[
 	Spawn editor stuff!
 ]]
 
-game_spawns = game_spawns or {}
+GAME_SPAWNS = GAME_SPAWNS or {}
 spawnEditorEnabled = false
 spawnEditors = {}
 
 function StartEditor(ply)
-	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==MODE_ESPAWN) then return end
+	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==mode_espawn) then return end
 	table.insert(spawnEditors,ply:SteamID())
 	if spawnEditorEnabled==true then ply:ChatPrint("Props already spawned. Editing enabled.") return end
 	spawnEditorEnabled = true
 
-	if table.Count(game_spawns)>0 then
+	if table.Count(GAME_SPAWNS)>0 then
 		GetMaxSID( function(max)
-			for k,v in pairs(game_spawns) do
+			for k,v in pairs(GAME_SPAWNS) do
 				local team = v["team"]
 				local spawnpoint = v["spawn"]
 				local spawn = ents.Create("spawnpoint_vis")
@@ -57,13 +57,13 @@ end
 
 function ClearEditorSpawns()
 	local removed = 0
-	if table.Count(game_spawns)>0 then
-		for k,v in pairs(game_spawns) do
+	if table.Count(GAME_SPAWNS)>0 then
+		for k,v in pairs(GAME_SPAWNS) do
 			local prop = v["prop"]
 			if IsValid(prop) then
 				prop:Remove()
 			end
-			game_spawns[k]["prop"] = nil
+			GAME_SPAWNS[k]["prop"] = nil
 		end
 	end
 end
@@ -106,10 +106,10 @@ function CreateSpawnProp(server_id, team, pos, ang, table_use)
 end
 
 function UpdateEditorSpawns( server_id, team, pos, ang, delete )
-	if game_spawns[server_id] and IsValid(game_spawns[server_id]["prop"]) then
-		local ent = game_spawns[server_id]["prop"]
+	if GAME_SPAWNS[server_id] and IsValid(GAME_SPAWNS[server_id]["prop"]) then
+		local ent = GAME_SPAWNS[server_id]["prop"]
 		if !IsValid(ent) then MsgN("No prop with this id!") end
-		game_spawns[server_id]["team"]=spawn
+		GAME_SPAWNS[server_id]["team"]=spawn
 		if isvector(pos) and util.IsInWorld(pos) then
 			ent:SetPos(pos)
 		end
@@ -121,10 +121,10 @@ function UpdateEditorSpawns( server_id, team, pos, ang, delete )
 			MsgN("GBU SPAWN PROP - ID: "..server_id.." WAS REMOVED!")
 		end
 	else
-		CreateSpawnProp(server_id, team, pos, ang, game_spawns)
+		CreateSpawnProp(server_id, team, pos, ang, GAME_SPAWNS)
 	end
-	if game_spawns[server_id] and IsValid(game_spawns[server_id]["spawn"]) then
-		local ent = game_spawns[server_id]["spawn"]
+	if GAME_SPAWNS[server_id] and IsValid(GAME_SPAWNS[server_id]["spawn"]) then
+		local ent = GAME_SPAWNS[server_id]["spawn"]
 		if !IsValid(ent) then MsgN("No spawn with this id!") end
 		if isvector(pos) and util.IsInWorld(pos) then
 			ent:SetPos(pos)
@@ -137,13 +137,13 @@ function UpdateEditorSpawns( server_id, team, pos, ang, delete )
 			MsgN("GBU SPAWN - ID: "..server_id.." WAS REMOVED!")
 		end
 	else
-		CreateSpawn(server_id, team, pos, ang, game_spawns)
+		CreateSpawn(server_id, team, pos, ang, GAME_SPAWNS)
 	end
 	UpdateSpawns(server_id, team, pos, ang, delete, function(data) PrintTable(data) end)
 end
 
 net.Receive("updatespawn", function(len, ply)
-	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==MODE_ESPAWN) then return end
+	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==mode_espawn) then return end
 	--id
 	local server_id = net.ReadInt(32)
 	--spawn_team
@@ -160,7 +160,7 @@ net.Receive("updatespawn", function(len, ply)
 end)
 
 net.Receive("createspawn", function(len, ply)
-	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==MODE_ESPAWN) then return end
+	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==mode_espawn) then return end
 
 	local team = net.ReadInt(16)
 	local pos_tbl = net.ReadTable()
@@ -174,8 +174,37 @@ net.Receive("createspawn", function(len, ply)
 end)
 
 function NewSpawnPoint(ply, cmd, args)
-	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==MODE_ESPAWN) then return end
+	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==mode_espawn) then return end
 	net.Start("spawnpoint_create_derma")
 	net.Send(ply)
 end
 concommand.Add("df_newspawn" , NewSpawnPoint )
+
+--spawn editor stuff
+function SpawnEditorOff(ply)
+	if !IsValid(ply) then return end
+	ply:KillSilent( )
+	ply:SendNextSpawn(CurTime()+1)
+	ply:SetObserverMode(OBS_MODE_CHASE)
+	ply:SetMoveType(MOVETYPE_OBSERVER)
+	ply:Spawn()
+	CheckEditorStatus(ply)
+end
+
+local function checkKey(ply, key)
+	if ply.Mode==mode_espawn and tonumber(ply:GetInfo("df_editspawns")) == 0 then
+		SpawnEditorOff(ply)
+	end
+end
+hook.Add("KeyPress","spawneditor_check_key",checkKey)
+
+function CheckEditorStatus(ply)
+	for k,v in pairs(spawnEditors) do 
+		if v == ply:SteamID() then
+			table.remove(spawnEditors,key)
+		end
+	end
+	if not (table.Count(spawnEditors)>0) then
+		ClearEditorSpawns()
+	end
+end

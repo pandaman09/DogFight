@@ -7,7 +7,9 @@ local SystemsLoaded = {}
 function GM.SendSystems( template )
 	if template then
 		table.insert(SystemsLoaded, template)
-		MsgN("System template loaded.")
+		template.svLoadFunction()
+		template.clLoadFunction()
+		MsgN("System ["..template.NAME.."] load complete.")
 	else
 		MsgN("No System to load")
 	end

@@ -5,11 +5,11 @@ require( "mysqloo" )
 
 local db
 
-local function gotofallback(error)
+local function gotoFallback(error)
 	-- warn the user that mysql is failing
 	MsgN("Server [Database]: MySQL has failed, reverting to sqlite.")
 	if error then
-		MsgN("Server [Database]: MySQL error: "..errorMessage)
+		MsgN("Server [Database]: MySQL error: "..error)
 	end
 	GM.USEMYSQL = false
 	--reload database system to fallback to sql
@@ -17,25 +17,25 @@ local function gotofallback(error)
 end
 
 --[[
-	Func: dbquery
+	Func: DbQuery
 	Desc: Allows queries with callbacks.
 	Args: string query, function callback
 ]]
-function dbquery( query, callback )
+function DbQuery( query, callback )
 
 	local q = db:query( query )
 
 	if( not q ) then
-		gotofallback()
+		gotoFallback()
 	end
 
-	function q:onSuccess( data )
+	local function q:onSuccess( data )
 		if callback then
 			callback(data)
 		end
 	end
 	
-	function q:onError( error, sql)
+	local function q:onError( error, sql)
 		if db:status()==mysqloo.DATABASE_NOT_CONNECTED then
 			MsgN("Database is not connected\n")
 		end
@@ -52,7 +52,7 @@ end
 	Args: string String
 ]]
 
-local function EscapeString( String )
+function EscapeString( String )
 	return db:escape( String )
 end
 
@@ -62,7 +62,7 @@ if( mysqloo ) then
 	db = db or mysqloo.connect( sqlinfo["host"], sqlinfo["username"], sqlinfo["password"] , sqlinfo["database"], sqlinfo["port"])
 
 	function db:onConnectionFailed( errorMessage )
-		gotofallback(errorMessage)
+		gotoFallback(errorMessage)
 	end
 
 	function db:onConnected( )
@@ -70,5 +70,5 @@ if( mysqloo ) then
 	end
 	db:connect()
 else
-	gotofallback()
+	gotoFallback()
 end
