@@ -587,6 +587,7 @@ end
 function GM:HUDPaint()
 	self:UpdateValues()
 	local H = ScrH()
+	local W = ScrW()
 	local editspawns = (GetConVarNumber( "df_editspawns" )==1)
 	if SPEC.STAGE && SPEC.STAGE == 3 and !editspawns then
 		self:DrawFreezeCamHUD(W,H)
