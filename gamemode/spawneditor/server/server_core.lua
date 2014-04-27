@@ -59,8 +59,22 @@ GAME_SPAWNS = GAME_SPAWNS or {}
 spawnEditorEnabled = false
 spawnEditors = {}
 
+function EnableEditor(ply)
+	if tonumber(ply:GetInfo("df_editspawns")) == 1 then
+		if ply:IsAdmin() or ply:IsSuperAdmin() then
+			ply:Spectate(OBS_MODE_ROAMING)
+			ply.Mode = mode_espawn
+			StartEditor(ply)
+			ply:ChatPrint("Spawn Editor Enabled, Clearing props and spawning new ones!")
+			return true --return something to stop the rest of the GM:PlayerSpawn hook from running!
+		end	
+		ply:ChatPrint("You are not an admin and cannot use the Spawnpoint Editor")
+	end
+end
+hook.Add("PlayerSpawn","EnableEditor",EnableEditor)
+
 function StartEditor(ply)
-	if ply:IsInEditor() then return end
+	if !ply:IsInEditor() then return end
 	table.insert(spawnEditors,ply:SteamID())
 	if spawnEditorEnabled==true then ply:ChatPrint("Props already spawned. Editing enabled.") return end
 	spawnEditorEnabled = true
@@ -77,7 +91,7 @@ function StartEditor(ply)
 				if max > k then
 					num = max + 1
 				end
-				CreateSpawnProp(num, team, Locatioin, Angle, v)
+				CreateSpawnProp(num, team, Location, Angle, v)
 			end
 		end)
 	end
@@ -134,7 +148,7 @@ function UpdateEditorSpawns( server_id, team, pos, ang, delete )
 end
 
 net.Receive("updatespawn", function(len, ply)
-	if ply:IsInEditor() then return end
+	if !ply:IsInEditor() then return end
 	--id
 	local server_id = net.ReadInt(32)
 	--spawn_team
@@ -151,7 +165,7 @@ net.Receive("updatespawn", function(len, ply)
 end)
 
 net.Receive("createspawn", function(len, ply)
-	if ply:IsInEditor() then return end
+	if !ply:IsInEditor() then return end
 
 	local team = net.ReadInt(16)
 	local pos_tbl = net.ReadTable()
@@ -165,7 +179,7 @@ net.Receive("createspawn", function(len, ply)
 end)
 
 function NewSpawnPoint(ply, cmd, args)
-	if ply:IsInEditor() then return end
+	if !ply:IsInEditor() then return end
 	net.Start("spawnpoint_create_derma")
 	net.Send(ply)
 end

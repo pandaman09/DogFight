@@ -294,17 +294,6 @@ function GM:PlayerSpawn(ply)
 		return
 	end
 
-	if tonumber(ply:GetInfo("df_editspawns")) == 1 then
-		if ply:IsAdmin() or ply:IsSuperAdmin() then
-			ply:Spectate(OBS_MODE_ROAMING)
-			ply.Mode = mode_espawn
-			StartEditor(ply)
-			ply:ChatPrint("Spawn Editor Enabled, Clearing props and spawning new ones!")
-			return
-		end	
-		ply:ChatPrint("You are not an admin and cannot use the Spawnpoint Editor")
-	end
-
 	local spawnpos,spawnang = self:SelectSpawn(ply)
 
 	ply:SetPos(spawnpos)
