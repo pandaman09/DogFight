@@ -1,7 +1,7 @@
 local system = {}
 
 system.FNAME = "spawneditor"
-system.NAME = "Spawn Point Editr"
+system.NAME = "Spawn Point Editor"
 system.DIR = GM.DIR .. "spawneditor/"
 system.svLoadFunction = function() 
 	MsgN("Server ["..system.NAME.."]: ")

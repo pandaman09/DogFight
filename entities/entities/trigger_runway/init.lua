@@ -23,7 +23,7 @@ end
 
 function ENT:StartTouch(ent)
 	if ent:GetClass() == "plane" then
-		if self.team == ent.ply:Team() || !GM.TEAM_BASED then
+		if self.team == ent.ply:Team() || !GAMEMODE.TEAM_BASED then
 			ent.OnRunway = true
 			ent:SetCollisionGroup(COLLISION_GROUP_WORLD)
 			if IsValid(ent.wing1) then

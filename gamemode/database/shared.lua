@@ -24,7 +24,7 @@ system.svLoadFunction = function()
 		include(system.DIR .. "server/sqlite.lua")
 	end
 	MsgN("	-Including to server - database_core.lua")
-	include("database_core.lua")
+	include("server/database_core.lua")
 end
 system.clLoadFunction = function() 
 	-- nothing to load client sided

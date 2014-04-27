@@ -1,10 +1,8 @@
---This file will act as the basics for system stuctures.
-
 local system = {}
 
-system.FNAME = "core_system"
+system.FNAME = "core_systems"
 system.NAME = "Core System"
-system.DIR = GM.DIR .. "core_system/"
+system.DIR = GM.DIR .. "core_systems/"
 system.svLoadFunction = function() 
 	MsgN("Server ["..system.NAME.."]: ")
 
@@ -27,7 +25,6 @@ system.svLoadFunction = function()
 end
 system.clLoadFunction = function() 
 	MsgN("Client ["..system.NAME.."]: ")
-
 	--Client
 	for _,v in pairs(file.Find(system.DIR .. "client/*.lua", "LUA")) do
 		MsgN("	-Including to client - " .. v)

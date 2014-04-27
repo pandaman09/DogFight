@@ -4,6 +4,10 @@
 --include( "filename.lua" ); -add for server and client
 --AddCSLuaFile( "filename.lua" ); -add for client
 
+-- gamemode info
+include( "gamemode.lua" )
+AddCSLuaFile( "gamemode.lua" )
+
 --precache net strings
 include( "net_precache.lua" )
 

@@ -1,7 +1,7 @@
 local system = {}
 
 system.FNAME = "concmd"
-system.NAME = "Console Cmmands"
+system.NAME = "Console Comands"
 system.DIR = GM.DIR .. "concmd/"
 system.svLoadFunction = function() 
 	MsgN("Server ["..system.NAME.."]: ")

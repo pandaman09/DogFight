@@ -3,17 +3,35 @@
 ]]
 require( "mysqloo" )
 
-local db
+local gmode = GM or GAMEMODE
+local USEMYSQL = gmode.USEMYSQL
+local sqlinfo = gmode.MYSQL
+local db = mysqloo.connect( sqlinfo["host"], sqlinfo["username"], sqlinfo["password"] , sqlinfo["database"], sqlinfo["port"])
 
 local function gotoFallback(error)
+	if USEMYSQL == false then return end
 	-- warn the user that mysql is failing
 	MsgN("Server [Database]: MySQL has failed, reverting to sqlite.")
 	if error then
 		MsgN("Server [Database]: MySQL error: "..error)
 	end
-	GM.USEMYSQL = false
+    USEMYSQL = false
 	--reload database system to fallback to sql
-	include(GM.DIR .. "database/" .. "server/sqlite.lua")
+	include(gmode.DIR .. "database/" .. "server/sqlite.lua")
+end
+
+if( mysqloo ) then
+
+	function db:onConnectionFailed( errorMessage )
+		gotoFallback(errorMessage)
+	end
+
+	function db:onConnected( )
+		MsgN( "Database Connected!" )
+	end
+	db:connect()
+else
+	gotoFallback()
 end
 
 --[[
@@ -25,17 +43,18 @@ function DbQuery( query, callback )
 
 	local q = db:query( query )
 
-	if( not q ) then
+ 	if( not q ) then
 		gotoFallback()
+		return
 	end
 
-	local function q:onSuccess( data )
+	function q:onSuccess( data )
 		if callback then
 			callback(data)
 		end
 	end
 	
-	local function q:onError( error, sql)
+	function q:onError( error, sql)
 		if db:status()==mysqloo.DATABASE_NOT_CONNECTED then
 			MsgN("Database is not connected\n")
 		end
@@ -57,18 +76,3 @@ function EscapeString( String )
 end
 
 -- Check if mysqloo was loaded, not sure if there is a better way to do this.
-if( mysqloo ) then
-	local sqlinfo = GM.Mysql
-	db = db or mysqloo.connect( sqlinfo["host"], sqlinfo["username"], sqlinfo["password"] , sqlinfo["database"], sqlinfo["port"])
-
-	function db:onConnectionFailed( errorMessage )
-		gotoFallback(errorMessage)
-	end
-
-	function db:onConnected( )
-		MsgN( "Database Connected!" )
-	end
-	db:connect()
-else
-	gotoFallback()
-end

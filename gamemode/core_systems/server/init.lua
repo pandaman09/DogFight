@@ -6,9 +6,9 @@ GAME_SPAWNS = GAME_SPAWNS or {}
 --[[
 	init locals
 ]]
-local gamemode.SpawnPoints = {}
-local gamemode.SpawnPoints.maps = {}
-local gamemode.SpawnPoints.Fallbacks = { -- Incase we couldn't get custom map spawns.
+local SpawnPoints = {}
+SpawnPoints.maps = {}
+SpawnPoints.Fallbacks = { -- Incase we couldn't get custom map spawns.
 	[1]={
 		["vec"]=Vector(-108, -100, 2000),
 		["ang"]=Angle(0,0,0)
@@ -23,9 +23,10 @@ local gamemode.SpawnPoints.Fallbacks = { -- Incase we couldn't get custom map sp
 	}
 }
 --workaround and faster because we are only looking up the global once
-local TEAM_BASED = GM.TEAM_BASED
-local SPAWN_TIME = GM.SPAWN_TIME
-local CRASH_FINE = GM.CRASH_FINE
+local gmode = GM or GAMEMODE
+local team_based = gmode.TEAM_BASED
+local spawn_time = gmode.SPAWN_TIME
+local crash_fine = gmode.CRASH_FINE
 
 --[[
 	Player mode Enums
@@ -69,7 +70,7 @@ for key, dir in pairs( ResourceLocations ) do
 	if( not files ) then continue end
 	for _, fileName in pairs( files ) do
 		resource.AddFile(dir .. fileName)
-		if( GM.UL_DEBUG ) then
+		if( gmode.UL_DEBUG ) then
 			Msg( "[DF] Adding resource: " .. dir .. fileName .. "\n" )
 		end
 	end
@@ -94,10 +95,10 @@ end
 local function SpawnsForMode(tbl)
 	for _,info in pairs(tbl) do
 		local team = info.team_id
-		if TEAM_BASED and ((team==1) or (team==2)) then
+		if time_based and ((team==1) or (team==2)) then
 			return true
 		end
-		if !TEAM_BASED and (team==3) then
+		if !time_based and (team==3) then
 			return true
 		end
 	end
@@ -178,7 +179,7 @@ end
 	Params: player ply
 ]]
 function GM:ChooseTeam(ply)
-	if( TEAM_BASED ) then
+	if( time_based ) then
 		local Team = team.BestAutoJoinTeam( )
 		-- If the random team selection fails, we'll have to guess. 
 
@@ -233,7 +234,7 @@ function GM:SelectSpawn(ply)
 	local Team = ply:Team()
 	
 	-- Select a team based entity.
-	if( TEAM_BASED ) then
+	if( time_based ) then
 		
 		if( ply:Team() == team_nums["IDC"] ) then
 			SearchEntity = "df_spawn_idc"
@@ -257,7 +258,11 @@ function GM:SelectSpawn(ply)
 		return (spawnpick:GetPos() or Vector( 0, 0, 0 )), (spawnpick:GetAngles() or Angle( 0, 0, 0 ))
 	end
 	local spawnpick = ents.FindByClass( SearchEntity )[math.random( 1, #ents.FindByClass( SearchEntity ) )]
-	return (spawnpick:GetPos() or Vector( 0, 0, 0 )), (spawnpick:GetAngles() or Angle( 0, 0, 0 ))
+	if IsValid(spawnpick) then
+		return spawnpick:GetPos(),spawnpick:GetAngles()
+	else
+		return SpawnPoints.Fallbacks[math.random( 1, table.Count(SpawnPoints.Fallbacks) )]
+	end
 end
 --[[
 	Func: GM:ModifySpawnTime
@@ -304,7 +309,7 @@ function GM:PlayerSpawn(ply)
 
 	ply:SetPos(spawnpos)
 
-	ply:SetAngles(spawnang)
+	ply:SetAngles(Angle(0,0,0))
 	ply:SetModel("models/player/Group03/male_08.mdl")
 
 	if( !IsValid(ply.plane) )then
@@ -385,7 +390,7 @@ end
 function GM:PlayerDeath( ply, pln, pln2)
 	
 	-- Check if we're in a team based game.
-	if( TEAM_BASED ) then
+	if( time_based ) then
 		timer.Simple( 1, function() 
 			self:ChooseTeam(ply)
 		end)
@@ -403,7 +408,7 @@ function GM:PlayerDeath( ply, pln, pln2)
 	end
 
 	if killer != "RESET" then
-		local tme = SPAWN_TIME
+		local tme = spawn_time
 		if ply.plane.killers != {} && ply.plane.killers != nil then
 			local name = "ERROR"
 			
@@ -417,11 +422,11 @@ function GM:PlayerDeath( ply, pln, pln2)
 				self:KillMessage(killer,name.." killed "..ply:Nick(), kill_type_kill)
 			else
 				self:KillMessage(ply,ply:Nick().." crashed.", kill_type_crash)
-				tme = SPAWN_TIME * 2
+				tme = spawn_time * 2
 				ply.tot_crash = ply.tot_crash or 0
 				ply.tot_crash = ply.tot_crash + 1
-				ply:MoneyMessage("Crashed (-"..math.ceil(CRASH_FINE * ply.skill).."C)", Color(255,100,100))
-				ply:TakeMoney(math.ceil(CRASH_FINE * ply.skill))
+				ply:MoneyMessage("Crashed (-"..math.ceil(crash_fine * ply.skill).."C)", Color(255,100,100))
+				ply:TakeMoney(math.ceil(crash_fine * ply.skill))
 				ply:StartNormalSpec()
 			end
 
@@ -430,11 +435,11 @@ function GM:PlayerDeath( ply, pln, pln2)
 		else
 		
 			self:KillMessage(ply,ply:Nick().." crashed.", kill_type_crash)
-			tme = SPAWN_TIME * 2
+			tme = spawn_time * 2
 			ply.tot_crash = ply.tot_crash or 0
 			ply.tot_crash = ply.tot_crash + 1
-			ply:MoneyMessage("Crashed (-"..math.ceil(CRASH_FINE * ply.skill).."C)", Color(255,100,100))
-			ply:TakeMoney(math.ceil(CRASH_FINE * ply.skill))
+			ply:MoneyMessage("Crashed (-"..math.ceil(crash_fine * ply.skill).."C)", Color(255,100,100))
+			ply:TakeMoney(math.ceil(crash_fine * ply.skill))
 			ply:StartNormalSpec()
 			
 		end
@@ -460,9 +465,9 @@ function GM:CalcDamageMoney(killer, ply)
 			if ent == killer then aw = aw + 5 end
 			if aw > 1 then
 				if ent:CheckGroup({"P"}) then
-					aw = aw * GM.P_DONATOR_MONEY
+					aw = aw * gmode.P_DONATOR_MONEY
 				elseif ent:CheckGroup({"G"}) then
-					aw = aw * GM.G_DONATOR_MONEY
+					aw = aw * gmode.G_DONATOR_MONEY
 				end
 				ent:AddMoney(aw)
 				ent:MoneyMessage("Damaged "..ply:Nick().." (+"..aw.."C)", Color(100,255,100,255))
