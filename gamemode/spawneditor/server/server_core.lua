@@ -9,65 +9,12 @@ local mode_film = 1
 local mode_espawn = 2
 
 --[[
-	Spawn editor stuff!
+	Helper functions
 ]]
-
-GAME_SPAWNS = GAME_SPAWNS or {}
-spawnEditorEnabled = false
-spawnEditors = {}
-
-function StartEditor(ply)
-	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==mode_espawn) then return end
-	table.insert(spawnEditors,ply:SteamID())
-	if spawnEditorEnabled==true then ply:ChatPrint("Props already spawned. Editing enabled.") return end
-	spawnEditorEnabled = true
-
-	if table.Count(GAME_SPAWNS)>0 then
-		GetMaxSID( function(max)
-			for k,v in pairs(GAME_SPAWNS) do
-				local team = v["team"]
-				local spawnpoint = v["spawn"]
-				local spawn = ents.Create("spawnpoint_vis")
-				local Location = spawnpoint:GetPos()
-				local Angle = spawnpoint:GetAngles()
-				if max > k then
-					max = max + 1
-					spawn:SetPos( Location )
-					spawn:SetAngles( Angle )
-					spawn:Spawn()
-					spawn:SetTeam(team)
-					spawn:SetSID(max)
-					spawn:SetRenderMode( RENDERMODE_TRANSALPHA )
-					spawn:SetColor( Color(255,255,255,200) )
-				else
-					spawn:SetPos( Location )
-					spawn:SetAngles( Angle )
-					spawn:Spawn()
-					spawn:SetTeam(team)
-					spawn:SetSID(k)
-					spawn:SetRenderMode( RENDERMODE_TRANSALPHA )
-					spawn:SetColor( Color(255,255,255,200) )
-				end
-
-				v["prop"]=spawn
-			end
-		end)
-	end
+local Pmeta = FindMetaTable("Player")
+function Pmeta:IsInEditor()
+	return !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==mode_espawn)
 end
-
-function ClearEditorSpawns()
-	local removed = 0
-	if table.Count(GAME_SPAWNS)>0 then
-		for k,v in pairs(GAME_SPAWNS) do
-			local prop = v["prop"]
-			if IsValid(prop) then
-				prop:Remove()
-			end
-			GAME_SPAWNS[k]["prop"] = nil
-		end
-	end
-end
-
 
 function CreateSpawn(server_id, team, pos, ang, table_use)
 	MsgN("Creating new spawn at [",pos,"] angles of [",ang,"]")
@@ -103,6 +50,50 @@ function CreateSpawnProp(server_id, team, pos, ang, table_use)
 
 	table_use[server_id] = table_use[server_id] or {}
 	table_use[server_id]["prop"]=spawn
+end
+
+--[[
+	Spawn editor stuff!
+]]
+GAME_SPAWNS = GAME_SPAWNS or {}
+spawnEditorEnabled = false
+spawnEditors = {}
+
+function StartEditor(ply)
+	if ply:IsInEditor() then return end
+	table.insert(spawnEditors,ply:SteamID())
+	if spawnEditorEnabled==true then ply:ChatPrint("Props already spawned. Editing enabled.") return end
+	spawnEditorEnabled = true
+
+	if table.Count(GAME_SPAWNS)>0 then
+		GetMaxSID( function(max)
+			for k,v in pairs(GAME_SPAWNS) do
+				local team = v["team"]
+				local spawnpoint = v["spawn"]
+				local spawn = ents.Create("spawnpoint_vis")
+				local Location = spawnpoint:GetPos()
+				local Angle = spawnpoint:GetAngles()
+				local num = k
+				if max > k then
+					num = max + 1
+				end
+				CreateSpawnProp(num, team, Locatioin, Angle, v)
+			end
+		end)
+	end
+end
+
+function ClearEditorSpawns()
+	local removed = 0
+	if table.Count(GAME_SPAWNS)>0 then
+		for k,v in pairs(GAME_SPAWNS) do
+			local prop = v["prop"]
+			if IsValid(prop) then
+				prop:Remove()
+			end
+			GAME_SPAWNS[k]["prop"] = nil
+		end
+	end
 end
 
 function UpdateEditorSpawns( server_id, team, pos, ang, delete )
@@ -143,7 +134,7 @@ function UpdateEditorSpawns( server_id, team, pos, ang, delete )
 end
 
 net.Receive("updatespawn", function(len, ply)
-	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==mode_espawn) then return end
+	if ply:IsInEditor() then return end
 	--id
 	local server_id = net.ReadInt(32)
 	--spawn_team
@@ -160,7 +151,7 @@ net.Receive("updatespawn", function(len, ply)
 end)
 
 net.Receive("createspawn", function(len, ply)
-	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==mode_espawn) then return end
+	if ply:IsInEditor() then return end
 
 	local team = net.ReadInt(16)
 	local pos_tbl = net.ReadTable()
@@ -174,7 +165,7 @@ net.Receive("createspawn", function(len, ply)
 end)
 
 function NewSpawnPoint(ply, cmd, args)
-	if !IsValid(ply) or !ply:IsAdmin() or !ply:IsSuperAdmin() or !(ply.Mode==mode_espawn) then return end
+	if ply:IsInEditor() then return end
 	net.Start("spawnpoint_create_derma")
 	net.Send(ply)
 end

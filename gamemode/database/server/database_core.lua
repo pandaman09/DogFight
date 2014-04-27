@@ -181,7 +181,7 @@ local function SaveAllProfiles()
 	end
 end
 hook.Add( "ShutDown", "ShuttingDown", SaveAllProfiles )
-timer.Create( "MYSQLSaveAllProfiles", PLY_SAVE_DELAY, 0, function() SaveAllProfiles() end)
+timer.Create( "MYSQLSaveAllProfiles", GM.PLY_SAVE_DELAY, 0, function() SaveAllProfiles() end)
 
 --[[
 	Func: SetAllOffline

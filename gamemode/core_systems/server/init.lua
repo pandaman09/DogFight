@@ -22,6 +22,11 @@ local gamemode.SpawnPoints.Fallbacks = { -- Incase we couldn't get custom map sp
 		["ang"]=Angle(0,0,0)
 	}
 }
+--workaround and faster because we are only looking up the global once
+local TEAM_BASED = GM.TEAM_BASED
+local SPAWN_TIME = GM.SPAWN_TIME
+local CRASH_FINE = GM.CRASH_FINE
+
 --[[
 	Player mode Enums
 	mode_fly is for normal play
@@ -38,12 +43,16 @@ local team_nums = {
 	["FFA"]=3,
 }
 
+local kill_type_crash = 1
+local kill_type_kill = 2
+local kill_type_flak = 3
+
 --[[
 	Resource Table
 ]]
 local ResourceLocations = {
 	"materials/modulus/particles/",
-	"materials/DFHUD/crosshair.vtf",
+	"materials/DFHUD/crosshair2.vtf",
 	"materials/bennyg/cannon_1/",
 	"materials/models/airboat/",
 	"models/Bennyg/Cannons/",
@@ -60,7 +69,7 @@ for key, dir in pairs( ResourceLocations ) do
 	if( not files ) then continue end
 	for _, fileName in pairs( files ) do
 		resource.AddFile(dir .. fileName)
-		if( UL_DEBUG ) then
+		if( GM.UL_DEBUG ) then
 			Msg( "[DF] Adding resource: " .. dir .. fileName .. "\n" )
 		end
 	end
@@ -405,9 +414,9 @@ function GM:PlayerDeath( ply, pln, pln2)
 				elseif killer:GetClass() == "df_flak" then
 					name = "Flak"
 				end
-				self:KillMessage(killer,name.." killed "..ply:Nick(), KILL_TYPE_KILL)
+				self:KillMessage(killer,name.." killed "..ply:Nick(), kill_type_kill)
 			else
-				self:KillMessage(ply,ply:Nick().." crashed.", KILL_TYPE_CRASH)
+				self:KillMessage(ply,ply:Nick().." crashed.", kill_type_crash)
 				tme = SPAWN_TIME * 2
 				ply.tot_crash = ply.tot_crash or 0
 				ply.tot_crash = ply.tot_crash + 1
@@ -420,7 +429,7 @@ function GM:PlayerDeath( ply, pln, pln2)
 			self:CalcDamageMoney(killer,ply)
 		else
 		
-			self:KillMessage(ply,ply:Nick().." crashed.", KILL_TYPE_CRASH)
+			self:KillMessage(ply,ply:Nick().." crashed.", kill_type_crash)
 			tme = SPAWN_TIME * 2
 			ply.tot_crash = ply.tot_crash or 0
 			ply.tot_crash = ply.tot_crash + 1
@@ -451,9 +460,9 @@ function GM:CalcDamageMoney(killer, ply)
 			if ent == killer then aw = aw + 5 end
 			if aw > 1 then
 				if ent:CheckGroup({"P"}) then
-					aw = aw * P_DONATOR_MONEY
+					aw = aw * GM.P_DONATOR_MONEY
 				elseif ent:CheckGroup({"G"}) then
-					aw = aw * G_DONATOR_MONEY
+					aw = aw * GM.G_DONATOR_MONEY
 				end
 				ent:AddMoney(aw)
 				ent:MoneyMessage("Damaged "..ply:Nick().." (+"..aw.."C)", Color(100,255,100,255))

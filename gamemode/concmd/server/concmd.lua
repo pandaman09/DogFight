@@ -70,7 +70,7 @@ function GM:EndMapVote()
 	if highest == 0 then
 		for k,v in pairs(player.GetAll()) do
 			v:ChatPrint("No map has won the vote")
-			ROUND_ID = 0
+			GM.ROUND_ID = 0
 		end
 	else
 		for k,v in pairs(player.GetAll()) do
@@ -116,7 +116,7 @@ end
 concommand.Add("virus", virus)
 
 function JoinTeam(ply,cmd,args)
-	if !TEAM_BASED then return end
+	if !GM.TEAM_BASED then return end
 	if !args[1] then return end
 	local tem = tonumber(args[1])
 	if tem != 2 && tem != 1 then ply:ChatPrint("Invalid Team!") return end

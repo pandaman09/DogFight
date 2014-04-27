@@ -522,7 +522,7 @@ function ENT:OnTakeDamage(dmg)
 		inf = inf.plane.ply
 	elseif inf:GetClass() == "plane_gun" || inf:GetClass() == "plane_gun2" then
 		if inf == self.gun then return end
-		if TEAM_BASED then
+		if GM.TEAM_BASED then
 			local ply = inf.plane.ply
 			if ply:Team() == self.ply:Team() then
 				ply:SendMessage("Stop shooting teammates!")

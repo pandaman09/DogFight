@@ -1,7 +1,3 @@
-include( "shared.lua" )
-include( "cl_panels.lua" )
-include( "cl_scoreboard.lua")
-
 local Color_Icon = Color( 255, 80, 0, 255 )
 killicon.AddFont( "gun", 		"HL2MPTypeDeath", 	"/",	Color_Icon )
 
@@ -23,62 +19,49 @@ HUD.PLANE_POS = Vector(0,0,0)
 function GM:Initialize()
 	local H = ScrH()
 	local W = ScrW()
-surface.CreateFont( "TID",
-                    {
-                    font    = "Tahoma",
-                    size    = W / 80,
-                    weight  = 1000,
-                    antialias = true,
-                    shadow = false
-            })
-surface.CreateFont( "Hud Lab",
-                    {
-                    font    = "Tahoma",
-                    size    = W / 144,
-                    weight  = 1000,
-                    antialias = true,
-                    shadow = false
-            })
-surface.CreateFont( "message",
-                    {
-                    font    = "Tahoma",
-                    size    = W / 96,
-                    weight  = 1000,
-                    antialias = true,
-                    shadow = false
-            })
-surface.CreateFont( "ScoreboardHead",
-                    {
-                    font    = "coolvetica",
-                    size    = W / 30,
-                    weight  = 500,
-                    antialias = true,
-                    shadow = false
-            })
-surface.CreateFont( "ScoreboardSub",
-                    {
-                    font    = "coolvetica",
-                    size    = W / 60,
-                    weight  = 500,
-                    antialias = true,
-                    shadow = false
-            })
-surface.CreateFont( "ScoreboardText",
-                    {
-                    font    = "Tahoma",
-                    size    = W / 90,
-                    weight  = 1000,
-                    antialias = true,
-                    shadow = false
-            })
-	for k,v in pairs(hook.GetTable()) do
-		if k == "HUDPaint" || k == "HUDPaintBackground" || k == "CreateMove" then
-			for kay,vay in pairs(v) do
-				--print("Blocked hook (Type 1)! Running on "..k.." with name "..kay)
-				hook.Remove(k,kay)
-			end
-		end
-	end
+	surface.CreateFont( "TID",{
+        font    = "Tahoma",
+        size    = W / 80,
+        weight  = 1000,
+        antialias = true,
+        shadow = false
+	})
+	surface.CreateFont( "Hud Lab",{
+		font    = "Tahoma",
+		size    = W / 144,
+		weight  = 1000,
+		antialias = true,
+		shadow = false
+	})
+	surface.CreateFont( "message",{
+		font    = "Tahoma",
+		size    = W / 96,
+		weight  = 1000,
+		antialias = true,
+		shadow = false
+	})
+	surface.CreateFont( "ScoreboardHead",{
+		font    = "coolvetica",
+		size    = W / 30,
+		weight  = 500,
+		antialias = true,
+		shadow = false
+	})
+	surface.CreateFont( "ScoreboardSub",{
+		font    = "coolvetica",
+		size    = W / 60,
+		weight  = 500,
+		antialias = true,
+		shadow = false
+	})
+	surface.CreateFont( "ScoreboardText",{
+		font    = "Tahoma",
+		size    = W / 90,
+		weight  = 1000,
+		antialias = true,
+		shadow = false
+	})
+	--removed the anticheat hook here.
 end
 
 function GM:UpdateValues() -- lovely and smooth  :D
@@ -528,7 +511,7 @@ function GM:DrawTopBar(W,H)
 	surface.DrawRect(0, 0, W, H * 0.03)
 	surface.SetDrawColor(Color(0,0,0,255))
 	surface.DrawOutlinedRect(0, 0, W, H * 0.03)
-	local ns = LocalPlayer().NextSpawn or CurTime() + SPAWN_TIME
+	local ns = LocalPlayer().NextSpawn or CurTime() + GM.SPAWN_TIME
 	local timeleft = math.ceil(math.Clamp(ns - CurTime(), 0, 30))
 	local text = ""
 	if !LocalPlayer():Alive() then
