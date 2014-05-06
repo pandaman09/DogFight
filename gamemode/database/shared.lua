@@ -3,9 +3,10 @@ local system = {}
 system.FNAME = "database"
 system.NAME = "Database"
 system.DIR = GM.DIR .. "database/"
-system.svLoadFunction = function() 
+system.svLoadFunction = function()
 	MsgN("Server ["..system.NAME.."]: ")
-	--Server
+	MsgN("	-Including to server - Provider: Database setting")
+	include(system.DIR .. "settings.lua")
 	local useother = (!GM.USEMYSQL and (GM.OTHERDATABASE!=nil or GM.OTHERDATABASE!=""))
 	if GM.USEMYSQL==true and useother==false then
 		MsgN("	-Including to server - Provider: MySQL")

@@ -11,9 +11,9 @@ AddCSLuaFile( "gamemode.lua" )
 --precache net strings
 include( "net_precache.lua" )
 
---settings
---DO NOT ADD CLIENT SIDED THE FILE CONTAINS SENSATIVE INFORMATION!
+--gamemode settings
 include( "settings.lua" )
+AddCSLuaFile( "settings.lua" )
 
 --system loading
 include( "system_loader.lua" )

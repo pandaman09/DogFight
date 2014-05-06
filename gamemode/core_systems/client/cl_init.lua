@@ -512,6 +512,7 @@ function GM:DrawTopBar(W,H)
 	surface.SetDrawColor(Color(0,0,0,255))
 	surface.DrawOutlinedRect(0, 0, W, H * 0.03)
 	local ns = LocalPlayer().NextSpawn or CurTime() + GAMEMODE.SPAWN_TIME
+	--local ns = 50
 	local timeleft = math.ceil(math.Clamp(ns - CurTime(), 0, 30))
 	local text = ""
 	if !LocalPlayer():Alive() then

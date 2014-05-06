@@ -1,9 +1,14 @@
-GM.USEMYSQL = true -- use mysql? If false, sqlite will be ran.
-GM.OTHERDATABASE = "" --use a differnt database method? For example: tmysql use "tmysql" after adding the tmysql.lua file into gamemode/database/server/
-GM.MYSQL = {["host"] = "127.0.0.1",
-	["port"] = 3306,
-	["username"] = "root",
-	["password"] = "",
-	["database"] = "faintlink"
-}
+GM.FLAK_MAX_HEALTH = 500
 
+GM.TEAM_BASED = true
+GM.UL_DEBUG = false
+
+GM.ROUND_ID = 0
+
+GM.SPAWN_TIME = 5
+GM.CRASH_FINE = 3
+
+GM.PLY_SAVE_DELAY = 300
+
+GM.P_DONATOR_MONEY = 2
+GM.G_DONATOR_MONEY = 1.5 

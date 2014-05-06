@@ -204,6 +204,8 @@ function GetSpawns(callback)
 	end
 end
 
+--spawn editor commands
+
 function UpdateSpawns(server_id, team, pos, ang, delete, callback)
 	local minus = 0
 	local query = ""

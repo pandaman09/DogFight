@@ -10,14 +10,17 @@ local SpawnPoints = {}
 SpawnPoints.maps = {}
 SpawnPoints.Fallbacks = { -- Incase we couldn't get custom map spawns.
 	[1]={
+		["type"]="df_spawn_ffa",
 		["vec"]=Vector(-108, -100, 2000),
 		["ang"]=Angle(0,0,0)
 	},
 	[2]={
+		["type"]="df_spawn_gbu",
 		["vec"]=Vector(0, 0, 2000),
 		["ang"]=Angle(0,0,0)
 	},
 	[3]={
+		["type"]="df_spawn_idc",
 		["vec"]=Vector(100, 100, 2000),
 		["ang"]=Angle(0,0,0)
 	}
@@ -39,9 +42,15 @@ local mode_film = 1
 local mode_espawn = 2
 
 local team_nums = {
-	["IDC"]=1,
-	["GBU"]=2,
-	["FFA"]=3,
+	["IDC"] = 1,
+	["GBU"] = 2,
+	["FFA"] = 3,
+}
+
+local team_names = {
+	[1] = "idc",
+	[2] = "gbu",
+	[3] = "ffa",
 }
 
 local kill_type_crash = 1
@@ -84,10 +93,6 @@ end
 	Remove spawn points and use the new spawn system.
 ]]	
 function GM:InitPostEntity()
-	for _,v in pairs( ents.FindByClass( "info_player_start" )) do
-		v:Remove();
-	end
-
 	GetSpawns(function(data)
 		self:CheckSpawns(data)
 	end)
@@ -117,7 +122,6 @@ function GM:CheckSpawns(tbl)
 	end
 	
 	self:CreateSpawns(fallback, tbl)
-
 end
 function GM:CreateSpawns(fallback, tbl)
 	if !fallback and tbl then
@@ -126,24 +130,17 @@ function GM:CreateSpawns(fallback, tbl)
 			local string_pos = string.Explode("_",info.position)
 			local Location = Vector(string_pos[1],string_pos[2],string_pos[3])
 			local string_ang = string.Explode("_",info.angle)
-			local Angle = Angle(string_ang[1],string_ang[2],string_ang[3])
+			local Angle = Angle(tonumber(string_ang[1]),tonumber(string_ang[2]),tonumber(string_ang[3]))
 			local team_id = info.team_id
-			local SpawnPoint
 
-			if team_id == 1 then
-				SpawnPoint = ents.Create( "df_spawn_idc" )
-			elseif team_id == 2 then
-				SpawnPoint = ents.Create( "df_spawn_gbu" )
-			elseif team_id == 3 then
-				SpawnPoint = ents.Create( "info_player_start" )
-			end
-			if !IsValid(SpawnPoint) then MsgN("No Spawn Point! - gamoemode/init.lua:138") return end
+			local SpawnPoint = ents.Create( "df_spawn_"..team_names[team_id] )
 			GAME_SPAWNS[server_id] = {}
 			GAME_SPAWNS[server_id]["spawn"] = SpawnPoint
 			GAME_SPAWNS[server_id]["team"] = team_id
 			SpawnPoint:SetPos( Location )
-			--SpawnPoint:KeyValue("Angles", Angle )
+			SpawnPoint:CSetAngles( Angle )
 			SpawnPoint:Spawn()
+			MsgN( "SPAWNING POINT ".."df_spawn_"..team_names[team_id].." at [",Location,"] angle of ["..tostring(SpawnPoint:CGetAngles()).."]" )
 		end	
 		return
 	end
@@ -154,11 +151,11 @@ function GM:CreateSpawns(fallback, tbl)
 		for server_id, info in pairs( Spawns.Fallbacks ) do
 			local Location = info.vec
 			local Angle = info.ang
-			MsgN( "SPAWNING FALLBACK POINT info_player_start at [",Location,"]" )
-			local SpawnPoint = ents.Create( "info_player_start" )
+			local SpawnPoint = ents.Create( info.type )
 			SpawnPoint:SetPos( Location )
-			--SpawnPoint:KeyValue("angles", Angle )
+			SpawnPoint:CSetAngles( Angle )
 			SpawnPoint:Spawn()
+			MsgN( "SPAWNING FALLBACK POINT "..info.type.." at [",Location,"] angle of ["..tostring(SpawnPoint:CGetAngles()).."]" )
 			if max > server_id then
 				max = max + 1
 				GAME_SPAWNS[max] = {}
@@ -230,36 +227,19 @@ end
 function GM:SelectSpawn(ply)
 	if( not IsValid( ply ) ) then return Vector( 0, 0, 0 ) end
 	
-	local SearchEntity = "info_player_start"
 	local Team = ply:Team()
 	
 	-- Select a team based entity.
-	if( time_based ) then
-		
-		if( ply:Team() == team_nums["IDC"] ) then
-			SearchEntity = "df_spawn_idc"
-		else 
-			SearchEntity = "df_spawn_gbu" 
-		end
-		
-		local SpawnPoints = ents.FindByClass( SearchEntity )
-		local SpawnCount = table.Count(SpawnPoints)
-		if !(SpawnCount>0) then
-			local FallbackPoints = ents.FindByClass( "info_player_start" )
-			local FallbackCount = table.Count(FallbackPoints)
-			if (FallbackCount>0) then
-				local spawnpick = FallbackPoints[math.random( 1, FallbackCount ) ]
-				return (spawnpick:GetPos() or Vector( 0, 0, 0 )), (spawnpick:GetAngles() or Angle( 0, 0, 0 ))
-			else
-				return Vector( 0, 0, 0 )
-			end
-		end
-		local spawnpick = SpawnPoints[math.random( 1, SpawnCount ) ]
-		return (spawnpick:GetPos() or Vector( 0, 0, 0 )), (spawnpick:GetAngles() or Angle( 0, 0, 0 ))
-	end
-	local spawnpick = ents.FindByClass( SearchEntity )[math.random( 1, #ents.FindByClass( SearchEntity ) )]
+	SearchEntity = "df_spawn_"..team_names[Team]
+
+	local SpawnPoints = ents.FindByClass( SearchEntity )
+	
+	local SpawnCount = table.Count(SpawnPoints)
+	
+	local spawnpick = SpawnPoints[ math.random( 1, SpawnCount ) ]
+
 	if IsValid(spawnpick) then
-		return spawnpick:GetPos(),spawnpick:GetAngles()
+		return spawnpick:GetPos(),spawnpick:CGetAngles()
 	else
 		return SpawnPoints.Fallbacks[math.random( 1, table.Count(SpawnPoints.Fallbacks) )]
 	end
@@ -297,8 +277,8 @@ function GM:PlayerSpawn(ply)
 	local spawnpos,spawnang = self:SelectSpawn(ply)
 
 	ply:SetPos(spawnpos)
+	ply:SetAngles(spawnang)
 
-	ply:SetAngles(Angle(0,0,0))
 	ply:SetModel("models/player/Group03/male_08.mdl")
 
 	if( !IsValid(ply.plane) )then

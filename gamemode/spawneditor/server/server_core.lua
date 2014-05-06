@@ -8,6 +8,14 @@ local mode_fly = 0
 local mode_film = 1
 local mode_espawn = 2
 
+local team_names = {
+	[1] = "idc",
+	[2] = "gbu",
+	[3] = "ffa",
+}
+
+SPAWNPOINT_INDEX_MAX = 0
+
 --[[
 	Helper functions
 ]]
@@ -18,14 +26,7 @@ end
 
 function CreateSpawn(server_id, team, pos, ang, table_use)
 	MsgN("Creating new spawn at [",pos,"] angles of [",ang,"]")
-	local spawn
-	if team == 1 then
-		spawn = ents.Create("df_spawn_idc")
-	elseif team == 2 then 
-		spawn = ents.Create("df_spawn_gbu")
-	elseif team == 3 then 
-		spawn = ents.Create("info_player_start")
-	end
+	local spawn = ents.Create( "df_spawn_"..team_names[team] )
 	spawn:SetPos( pos )
 	spawn:SetAngles( ang )
 	spawn:Spawn()
@@ -80,20 +81,21 @@ function StartEditor(ply)
 	spawnEditorEnabled = true
 
 	if table.Count(GAME_SPAWNS)>0 then
-		GetMaxSID( function(max)
+		--GetMaxSID( function(max)
+			--GetMaxSID shouldn't be nessecary because we are only loading the spawns not creating new ones.
 			for k,v in pairs(GAME_SPAWNS) do
 				local team = v["team"]
 				local spawnpoint = v["spawn"]
 				local spawn = ents.Create("spawnpoint_vis")
 				local Location = spawnpoint:GetPos()
-				local Angle = spawnpoint:GetAngles()
+				local Angle = spawnpoint:CGetAngles()
 				local num = k
-				if max > k then
-					num = max + 1
-				end
-				CreateSpawnProp(num, team, Location, Angle, v)
+		--		if max > num then
+		--			num = max + num
+		--		end
+				CreateSpawnProp(num, team, Location, Angle, GAME_SPAWNS)
 			end
-		end)
+		--end)
 	end
 end
 
@@ -119,11 +121,11 @@ function UpdateEditorSpawns( server_id, team, pos, ang, delete )
 			ent:SetPos(pos)
 		end
 		if isangle(ang) and (ent:GetAngles()!=ang) then
-			ent:SetAngles(ang)
+			ent:CSetAngles(ang)
 		end
 		if delete==true then
 			ent:Remove()
-			MsgN("GBU SPAWN PROP - ID: "..server_id.." WAS REMOVED!")
+			MsgN("SPAWN PROP - ID: "..server_id.." WAS REMOVED!")
 		end
 	else
 		CreateSpawnProp(server_id, team, pos, ang, GAME_SPAWNS)
@@ -135,11 +137,11 @@ function UpdateEditorSpawns( server_id, team, pos, ang, delete )
 			ent:SetPos(pos)
 		end
 		if isangle(ang) and (ent:GetAngles()!=ang) then
-			ent:SetAngles(ang)
+			ent:CSetAngles(ang)
 		end
 		if delete==true then
 			ent:Remove()
-			MsgN("GBU SPAWN - ID: "..server_id.." WAS REMOVED!")
+			MsgN("SPAWN - ID: "..server_id.." WAS REMOVED!")
 		end
 	else
 		CreateSpawn(server_id, team, pos, ang, GAME_SPAWNS)
