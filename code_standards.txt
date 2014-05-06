@@ -8,23 +8,21 @@ function( param1, param2 )
 string = "string" .. string .. "string"
 
 
-Function documentation
-	FunctionName:
-		@param
-		Describe function parameters. It also requires the name of the parameter.
-		@see
-		Refers to other functions or tables.
-		@return
-		Describe the returning value or values of the function.
-		@usage
-		Describe the usage of the function or variable.
-		@description
-		The description of the function or table. This is usually infered automatically.
-		@name
-		The name of the function or table definition. This is usually infered from the code analysis, and the programmer does not need to define it. If LuaDoc can infer the name of the function automatically it's even not recomended to define the name explicitally, to avoid redundancy.
-		@class
-		If LuaDoc cannot infer the type of documentation (function, table or module definition), the programmer can specify it explicitally.
-		@field
-		Describe a table field definition.
-		@release
-		Free format string to describe the module or file release.
+Function Documentation as follows:
+
+FILENAME
+	FUNCTIONNAME( Parameters )
+		Params
+			parameter (type) (optional/required)
+		Returns
+			what the function returns
+		Calls
+			functionName (params)
+			or
+			table name - value
+		Usage
+			what the function does
+		Scope
+			local or global
+You can see examples here:
+https://github.com/kila58/DogFight/wiki/Database-system-documentation
