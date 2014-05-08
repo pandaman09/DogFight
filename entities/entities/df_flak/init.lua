@@ -14,7 +14,7 @@ local current_map_is_cvn78_b2 = (game.GetMap() == "df_cvn78_b2")
 local FiringDelay = 1.2
 
 --ENT.team      = "idc" -- They should set it manually in all cases, else, it is an error.
-ENT.health      = FLAK_MAX_HEALTH -- ????
+ENT.health      = GAMEMODE.FLAK_MAX_HEALTH or 500 -- set in settings.lua
 
 ENT.search_delay = 1
 ENT.skill        = 2
@@ -41,7 +41,7 @@ function ENT:Initialize()
 	
 	self:SetSequence(self:LookupSequence("aim"))
 	
-	if not TEAM_BASED then -- ???
+	if not GAMEMODE.TEAM_BASED then -- set in settings.lua
 		--self:Remove()
 	end
 	
@@ -102,10 +102,10 @@ function ENT:FireGun(targetpos, targetvel)
 end
 
 function ENT:Think()
-	thaskjdhklasjdklsdkajlsdamlsmal(self)
+	FlacClacStuff(self)
 end
 
-function thaskjdhklasjdklsdkajlsdamlsmal(self)
+function FlacClacStuff(self)
 	local CTime = CurTime()
 	
 	local selfpos = self:GetPos()

@@ -90,7 +90,7 @@ function ENT:PhysicsCollide(data)
 			util.Effect( "df_bombs",ED)
 			for k,v in pairs(ents.FindInSphere(self:GetPos(), 350)) do
 				if v:GetClass() == "plane" then
-					if !TEAM_BASED || (v.ply:Team() != self.plane.ply:Team()) || (v.ply == self.plane.ply) then
+					if !GAMEMODE.TEAM_BASED || (v.ply:Team() != self.plane.ply:Team()) || (v.ply == self.plane.ply) then
 						if v.Damage < 100 then
 							v:Shake(15, 50)
 							local dam = math.Clamp(1050 - v:GetPos():Distance(self:GetPos()),20,1050)

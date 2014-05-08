@@ -1,0 +1,28 @@
+Code Standard:
+global functions = UpperCamelCase
+local functions = lowerCamelCase
+global vars = UPPERCASE
+local vars = lowercase
+
+function( param1, param2 )
+string = "string" .. string .. "string"
+
+
+Function Documentation as follows:
+
+FILENAME
+	FUNCTIONNAME( Parameters )
+		Params
+			parameter (type) (optional/required)
+		Returns
+			what the function returns
+		Calls
+			functionName (params)
+			or
+			table name - value
+		Usage
+			what the function does
+		Scope
+			local or global
+You can see examples here:
+https://github.com/kila58/DogFight/wiki/Database-system-documentation
