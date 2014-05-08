@@ -1,31 +1,30 @@
 local sqlite_table_create_query = [[
-	CREATE TABLE IF NOT EXISTS clients (
-		name varchar(50),
-		steamid varchar(25) primary key,
-		server varchar(5),
-		groups varchar(6),
-		timeplayed int(100)
+CREATE TABLE IF NOT EXISTS clients (
+		name TEXT,
+		steamid TEXT PRIMARY KEY,
+		server TEXT,
+		groups TEXT,
+		timeplayed INT
 	);
 
-	CREATE TABLE IF NOT EXISTS dogfight (
-		steamid varchar(25) primary key,
-		kills int(10),
-		deaths int(10),
-		money int(10),	
-		unlocks varchar(500),
-		tc int(50),
-		ttd int(50)
-	);
+CREATE TABLE IF NOT EXISTS dogfight (
+	steamid TEXT PRIMARY KEY,
+	kills INT,
+	deaths INT,
+	money INT,	
+	unlocks TEXT,
+	tc INT,
+	ttd INT
+);
 
-	CREATE TABLE IF NOT EXISTS mapspawns (
-		server_id int(11) primary key AUTOINCREMENT,
-		map varchar(50),
-		team_id tinyint(4),
-		position varchar(50),
-		angle varchar(50)
-	);
+CREATE TABLE IF NOT EXISTS mapspawns (
+	server_id INTEGER PRIMARY KEY,
+	map TEXT,
+	team_id INT,
+	position TEXT,
+	angle TEXT
+);
 ]]
-
 
 --[[
 	Func: DbQuery
@@ -69,5 +68,6 @@ local function createSqliteTables()
 	MsgN( "Does Table 'dogfight' Exist: ", sql.TableExists( "dogfight" ) )
 	MsgN( "Does Table 'mapspanws' Exist: ", sql.TableExists( "mapspawns" ) )
 end
-hook.Add("Initialize", "SQLiteTableCreation", createSqliteTables )
+createSqliteTables() -- doing this anyways because mysql may fail at any time.
+--hook.Add("Initialize", "SQLiteTableCreation", createSqliteTables )
 concommand.Add( "SQLite_Check", createSqliteTables ) -- For debugging

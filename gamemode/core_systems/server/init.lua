@@ -6,9 +6,14 @@ GAME_SPAWNS = GAME_SPAWNS or {}
 --[[
 	init locals
 ]]
-local SpawnPoints = {}
-SpawnPoints.maps = {}
-SpawnPoints.Fallbacks = { -- Incase we couldn't get custom map spawns.
+--workaround and faster because we are only looking up the global once
+local gmode = GM or GAMEMODE
+local team_based = gmode.TEAM_BASED
+local spawn_time = gmode.SPAWN_TIME
+local crash_fine = gmode.CRASH_FINE
+
+gmode.SpawnPoints = {}
+gmode.SpawnPoints.Fallbacks = { -- Incase we couldn't get custom map spawns.
 	[1]={
 		["type"]="df_spawn_ffa",
 		["vec"]=Vector(-108, -100, 2000),
@@ -25,11 +30,6 @@ SpawnPoints.Fallbacks = { -- Incase we couldn't get custom map spawns.
 		["ang"]=Angle(0,0,0)
 	}
 }
---workaround and faster because we are only looking up the global once
-local gmode = GM or GAMEMODE
-local team_based = gmode.TEAM_BASED
-local spawn_time = gmode.SPAWN_TIME
-local crash_fine = gmode.CRASH_FINE
 
 --[[
 	Player mode Enums
@@ -110,12 +110,13 @@ local function SpawnsForMode(tbl)
 	return false
 end
 function GM:CheckSpawns(tbl)
+
 	local spawns = tbl or {}
 	
 	local mapHasSpawns = ( spawns!=nil and spawns[1]!=nil )
 	local mapSpawnsForMode = SpawnsForMode(spawns)
 	local fallback = false
-
+	
 	if !mapHasSpawns or !mapSpawnsForMode then
 		Msg("No Spawn points for this map or mode! Go to Settings menu and enable Spawnpoint Editing\n")
 		fallback = true
@@ -144,11 +145,10 @@ function GM:CreateSpawns(fallback, tbl)
 		end	
 		return
 	end
-	
 	-- The map data doesnt exist. Creating fallbacks.
-	local Spawns = gamemode.SpawnPoints
+	local Spawns = gmode.SpawnPoints.Fallbacks
 	GetMaxSID( function(max)
-		for server_id, info in pairs( Spawns.Fallbacks ) do
+		for server_id, info in pairs( Spawns ) do
 			local Location = info.vec
 			local Angle = info.ang
 			local SpawnPoint = ents.Create( info.type )
@@ -200,7 +200,7 @@ end
 	Params: player ply
 ]]
 function GM:PlayerInitialSpawn(ply)
-	ply:SendNextSpawn(0)
+	--ply:SendNextSpawn(0)
 	self:ChooseTeam(ply)
 
 	ply.learnt = false
@@ -227,21 +227,28 @@ end
 function GM:SelectSpawn(ply)
 	if( not IsValid( ply ) ) then return Vector( 0, 0, 0 ) end
 	
-	local Team = ply:Team()
+	local Team_n = ply:Team()
 	
 	-- Select a team based entity.
-	SearchEntity = "df_spawn_"..team_names[Team]
+	local SearchEntity = ""
+	if team_names[Team_n] then
+		SearchEntity = "df_spawn_"..team_names[Team_n]
+	else --fallback, should only be called if something goes really bad.
+		SearchEntity = "df_spawn_ffa"
+	end
 
 	local SpawnPoints = ents.FindByClass( SearchEntity )
 	
 	local SpawnCount = table.Count(SpawnPoints)
 	
 	local spawnpick = SpawnPoints[ math.random( 1, SpawnCount ) ]
-
+	--local fallback = GAME_SPAWNS[math.random( 1, table.Count(SpawnPoints.Fallbacks) )] --pulling straight from table, may not work correctly
 	if IsValid(spawnpick) then
 		return spawnpick:GetPos(),spawnpick:CGetAngles()
+	--elseif IsValid(fallback) then
+	--	return fallback:GetPos(),fallback:CGetAngles()
 	else
-		return SpawnPoints.Fallbacks[math.random( 1, table.Count(SpawnPoints.Fallbacks) )]
+		return Vector(0,0,0),Angle(0,0,0)
 	end
 end
 --[[
@@ -260,6 +267,8 @@ end
 ]]
 function GM:PlayerSpawn(ply)
 	if( not IsValid( ply ) or ply:IsBot() ) then return end
+	--new check for if a player isn't fully loaded and doesn't have a team yet.
+	if !ply:Team() or ply:Team()==nil or ply:Team()==0 then return end
 	if( not ply.Allow or ply.Allow == false ) then 
 		ply:Spectate(OBS_MODE_ROAMING)
 		return false

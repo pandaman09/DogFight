@@ -5,9 +5,9 @@ system.NAME = "Database"
 system.DIR = GM.DIR .. "database/"
 system.svLoadFunction = function()
 	MsgN("Server ["..system.NAME.."]: ")
-	MsgN("	-Including to server - Provider: Database setting")
+	MsgN("	-Including to server - settings.lua")
 	include(system.DIR .. "settings.lua")
-	local useother = (!GM.USEMYSQL and (GM.OTHERDATABASE!=nil or GM.OTHERDATABASE!=""))
+	local useother = (!GM.USEMYSQL and (GM.OTHERDATABASE!=nil and GM.OTHERDATABASE!=""))
 	if GM.USEMYSQL==true and useother==false then
 		MsgN("	-Including to server - Provider: MySQL")
 		include(system.DIR .. "server/mysql.lua")

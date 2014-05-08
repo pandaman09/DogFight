@@ -4,26 +4,31 @@
 require( "mysqloo" )
 
 local gmode = GM or GAMEMODE
-local USEMYSQL = gmode.USEMYSQL
 local sqlinfo = gmode.MYSQL
 local db = mysqloo.connect( sqlinfo["host"], sqlinfo["username"], sqlinfo["password"] , sqlinfo["database"], sqlinfo["port"])
 
-local function gotoFallback(error)
-	if USEMYSQL == false then return end
+local function gotoFallback(query, callback, error)
+	if gmode.USEMYSQL == false then return end
 	-- warn the user that mysql is failing
 	MsgN("Server [Database]: MySQL has failed, reverting to sqlite.")
 	if error then
 		MsgN("Server [Database]: MySQL error: "..error)
 	end
-    USEMYSQL = false
+
+    gmode.USEMYSQL = false
 	--reload database system to fallback to sql
+	MsgN("Server [Database]: Switching to SQLite Provider")
+	MsgN("	-Including to server - Provider: SQLite")
 	include(gmode.DIR .. "database/" .. "server/sqlite.lua")
+	if query != "" then
+		timer.Simple(0, function() DbQuery(query, callback) end) --recall the query!
+	end
 end
 
 if( mysqloo ) then
 
 	function db:onConnectionFailed( errorMessage )
-		gotoFallback(errorMessage)
+		gotoFallback( "", nil, errorMessage )
 	end
 
 	function db:onConnected( )
@@ -44,7 +49,7 @@ function DbQuery( query, callback )
 	local q = db:query( query )
 
  	if( not q ) then
-		gotoFallback()
+		gotoFallback(query,callback)
 		return
 	end
 

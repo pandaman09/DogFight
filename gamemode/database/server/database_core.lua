@@ -108,7 +108,7 @@ function LoadProfiles(ply)
 			
 			-- Tell the game we're reading to play. Stop the spamming of LoadProfiles()
 			hook.Call( "MYSQL.PlayerLoaded", nil, ply )
-			ply:ChatPrint( "DogFight game data loaded." .. TranslateFlags(ply) )
+			
 		end)
 	end)
 
@@ -193,6 +193,8 @@ local function SetAllOffline()
 end
 hook.Add( "ShutDown", "ShuttingDown", SetAllOffline )
 hook.Add( "Initialize", "StartingUp", function() timer.Simple( 1, SetAllOffline ) end)
+
+--Spawn points
 
 function GetSpawns(callback)
 	local map = EscapeString(game.GetMap())
