@@ -370,18 +370,14 @@ function Start_UL(length, client)
 	num = net.ReadInt(16)
 end
 
---usermessage.Hook("ul_start", Start_UL)
-
 net.Receive("ul_start", Start_UL)
 
 function End_UL(length, client)
-	print("Unlocks have sent")
+	--print("Unlocks have sent")
 	if HANGAR && HANGAR.Refresh then
 		HANGAR:Refresh()
 	end
 end
-
---usermessage.Hook("ul_end", End_UL)
 
 net.Receive("ul_end", End_UL)
 
@@ -393,16 +389,12 @@ function Update_UL(length, client)
 	table.insert(LocalPlayer().UNLOCKS, t)
 end
 
---usermessage.Hook("ul_chunk", Update_UL)
-
 net.Receive("ul_chunk", Update_UL)
 
 function StatsLoad(length, client)
 	LocalPlayer().tot_crash = net.ReadInt(32)
 	LocalPlayer().tot_targ_damage = net.ReadInt(32)
 end
-
---usermessage.Hook("stats", StatsLoad)
 
 net.Receive("stats", StatsLoad)
 
@@ -599,17 +591,16 @@ end
 
 function GetMaps(length, client)
 	local AM = net.ReadInt(16)
+	local map_s = net.ReadString()
 	if AM == 0 then
 		MAP.list:AddLine("No maps!")
 		return
 	else
 		for i=1, AM do
-			MAP.list:AddLine(net.ReadString())
+			MAP.list:AddLine(map_s)
 		end
 	end
 end
-
---usermessage.Hook("sendmaps", GetMaps)
 
 net.Receive("sendmaps", GetMaps)
 
@@ -619,8 +610,6 @@ vgui.Register( "df_maps", PANEL, "DFrame")
 function StartMapVote(length, client)
 	MAP = vgui.Create("df_maps")
 end
-
---usermessage.Hook("mapvote", StartMapVote)
 
 net.Receive("mapvote", StartMapVote)
 
@@ -847,14 +836,12 @@ end
 timer.Simple(10, SendTrail )
 
 function Trail()
-	if LocalPlayer():CheckGroup({"G", "P","S"}) then
+	if LocalPlayer():CheckGroup({"G","P","S"}) then
 		vgui.Create("df_trails")
 	else
 		LocalPlayer():ChatPrint("You can't set your trails you are not a donator")
 	end
 end
-
---usermessage.Hook("team", Trail)
 
 net.Receive("team", Trail)
 
@@ -958,4 +945,3 @@ net.Receive("team", Trail)
 
 
  vgui.Register( "CtrlColor", PANEL, "DPanel" )
-

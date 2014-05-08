@@ -2,9 +2,11 @@
 ENT.Base = "base_point"
 ENT.Type = "point"
 
-function ENT:KeyValue(key, val)
-	if key == "Angles" then
-		local data = string.Explode(" ", val)
-		self.ANG = Angle(data[1],data[2],data[3])
-	end
+function ENT:CSetAngles(ang)
+	if not isangle(ang) then ErrorNoHalt("IDC spawn point tried to set 'angles' with wrong data type.") end
+	self.angles = ang
+end
+
+function ENT:CGetAngles()
+	return self.angles or Angle(0,0,0)
 end
