@@ -1,0 +1,8 @@
+"VertexLitGeneric"
+{
+	"$alphatest" 1
+	"$basetexture" "models/props_dogfight/white_fuel"
+	"$model" 1
+	"$nocull" 1
+}
+

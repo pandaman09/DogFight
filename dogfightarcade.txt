@@ -1,0 +1,10 @@
+"gamemode"
+{
+	"base"		"base"
+	"title"		"Dogfight: Arcade Assault"
+	"maps"		""
+	"menusystem"	"1"
+	"settings"
+	{
+	}
+}

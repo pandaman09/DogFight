@@ -1,0 +1,8 @@
+"UnlitGeneric"
+{
+	"$basetexture"		"DFHUD/rocket_arrow"
+    "$translucent"   "1"
+    "$translucency" "1"
+    "$ignorez" "1"
+	"$color" "{100 100 255}"
+}

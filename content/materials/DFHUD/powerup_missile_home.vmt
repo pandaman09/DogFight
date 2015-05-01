@@ -1,0 +1,7 @@
+"UnlitGeneric"
+{
+	"$basetexture"		"DFHUD/powerup_missile_home"
+      	"$translucent"   "1"
+     	 "$translucency" "1"
+     	 "$ignorez" "1"
+}

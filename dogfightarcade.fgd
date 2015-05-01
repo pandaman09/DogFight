@@ -1,0 +1,57 @@
+@include "base.fgd"
+@include "halflife2.fgd"
+
+@PointClass base(Targetname, Origin) studioprop("models/props_silo/rocket_low.mdl")  = df_red_rocket : "The red teams rocket"
+[
+
+]
+
+@PointClass base(Targetname, Origin) studioprop("models/props_silo/rocket_low.mdl")  = df_blue_rocket : "The blue teams rocket"
+[
+
+]
+
+@PointClass base(Targetname, Origin) = df_fuel_node : "Where the fuel spawns"
+[
+	team(choices) : "Team" : 1 : "Which team the fuel node belongs to" = 
+	[
+		1 : "Red"
+		2 : "Blue"
+	]	
+]
+
+@PointClass base(Targetname, Origin) studioprop("models/props_trainstation/trainstation_clock001.mdl") = df_powerup: "A powerup!"
+[
+	angles(angle)	 : "Angles"	: "-90 0 0" : "!!!!! SHOULD BE -90 0 0 !!!!!!!!!!!!"
+]
+
+@PointClass base(Targetname, Origin) = df_sea_level : "Where the altitude meter registers sea level."
+[
+	
+]
+lo
+@PointClass base(Targetname, Origin) = df_map_center : "Bots will fly to this if they dont have a target(open areas please) also rockets will as well"
+[
+	
+]
+
+@PointClass base(Targetname, Origin) = df_trees: "Tree spawner (PLACE WITH VISIBLITY TO SKYBOX ROOF AND AT THE MOST NEGATIVE XY COORD OF YOUR MAP, MAP MUST BE SQUARE)"
+[
+	
+]
+
+@PointClass base(Targetname, Origin) = df_round_end : "When the round ends (rocket begins to launch)"
+[
+	output OnRedWin(void) : "When red rocket launches."
+	output OnBlueWin(void) : "When blue rocket launches."
+]
+
+@SolidClass base(Targetname) color(255 10 10) = df_capture_zone : "The zone in which a player will capture the fuel"
+[
+	team(choices) : "Team" : 1 : "Which team the cap zone is on" = 
+	[
+		1 : "Red"
+		2 : "Blue"
+	]	
+]
+
